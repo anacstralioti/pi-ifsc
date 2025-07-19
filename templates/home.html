@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block 'body' %}
+<div class="container mt-5">
+    <h1 class="mt-2 text-sm text-gray-600">Aqui vamos fazer a página inicial</h1>
+    <p class="mt-2 text-sm text-gray-600">
+        Telas de
+        <a href="{% url 'registro' %}" class="font-semibold text-indigo-600 hover:text-indigo-500">cadastro</a>
+        e 
+        <a href="{% url 'login' %}" class="font-semibold text-indigo-600 hover:text-indigo-500">login</a>    
+    </p>
+</div>
+{% endblock 'body' %} 
