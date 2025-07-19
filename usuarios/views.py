@@ -70,7 +70,7 @@ def login(request):
             messages.add_message(request, constants.SUCCESS, f'Bem-vindo, {user.first_name}!')
             return redirect('/usuarios/projetos/') 
         
-        messages.add_message(request, constants.ERROR, 'Login ou senha inválidos.')
+        messages.add_message(request, constants.ERROR, 'E-mail ou senha inválidos.')
         return render(request, 'login.html', {'data': {'login': email}}) 
 
 @login_required
