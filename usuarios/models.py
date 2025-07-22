@@ -3,7 +3,9 @@ from django.contrib.auth.models import User # Importa o modelo de usuário padr�
 
 class Projeto(models.Model):
     nome_projeto = models.CharField(
-        max_length=255, 
+        max_length=255,
+        blank=False,
+        null=False, 
         verbose_name="Nome do Projeto"
     )
 
@@ -30,3 +32,50 @@ class Projeto(models.Model):
     def __str__(self):
         """Retorna uma representação em string do objeto (útil no admin)."""
         return self.nome_projeto
+    
+    class Tarefa(models.Model):
+        nome_tarefa = models.CharField(
+        max_length=100,
+        null= False,
+        blank = False
+    )
+        descricao = models.TextField(
+            blank=True,    
+            null=True,     
+            verbose_name="Descrição"
+    )
+       
+        categoria = models.CharField(
+            max_length=20,
+            choices=[
+                ('vermelho', 'Vermelho'),
+                ('laranja', 'Laranja'),
+                ('amarelo', 'Amarelo'),
+                ('verde', 'Verde'),
+            ],
+        )
+        estimativa_horas = models.TimeField(
+            null= False,
+            blank=False
+        )
+        projeto = models.ForeignKey('Projeto', on_delete=models.CASCADE, related_name='tarefas')
+        usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='tarefas_atribuidas')
+       
+        def __str__(self):
+            return f"{self.titulo}"
+        
+        class Apontamento (models.Model):
+            hora_inicial = models.TimeField(
+            auto_now_add=True,
+            null= False,
+            blank = False,
+    )
+            hora_final = models.TimeField(
+            null= True,
+    )
+            descricao = models.TextField(
+            blank=True,    
+            null=True,     
+            verbose_name="Descrição"
+    )
+            
