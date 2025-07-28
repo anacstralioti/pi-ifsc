@@ -15,19 +15,40 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Projeto',
+            name="Projeto",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nome_projeto', models.CharField(max_length=255, verbose_name='Nome do Projeto')),
-                ('descricao', models.TextField(blank=True, null=True, verbose_name='Descrição')),
-                ('data_criacao', models.DateTimeField(auto_now_add=True)),
-                ('data_ultima_atualizacao', models.DateTimeField(auto_now=True)),
-                ('usuario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='projetos_criados', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "nome_projeto",
+                    models.CharField(max_length=255, verbose_name="Nome do Projeto"),
+                ),
+                (
+                    "descricao",
+                    models.TextField(blank=True, null=True, verbose_name="Descrição"),
+                ),
+                ("data_criacao", models.DateTimeField(auto_now_add=True)),
+                ("data_ultima_atualizacao", models.DateTimeField(auto_now=True)),
+                (
+                    "usuario",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="projetos_criados",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Projeto',
-                'verbose_name_plural': 'Projetos',
-                'ordering': ['-data_criacao'],
+                "verbose_name": "Projeto",
+                "verbose_name_plural": "Projetos",
+                "ordering": ["-data_criacao"],
             },
         ),
     ]

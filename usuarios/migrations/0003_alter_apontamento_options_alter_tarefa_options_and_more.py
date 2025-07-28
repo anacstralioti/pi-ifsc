@@ -7,21 +7,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('usuarios', '0002_apontamento_tarefa'),
+        ("usuarios", "0002_apontamento_tarefa"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='apontamento',
+            name="apontamento",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='tarefa',
+            name="tarefa",
             options={},
         ),
         migrations.AlterField(
-            model_name='tarefa',
-            name='projeto',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='apontamentos', to='usuarios.projeto'),
+            model_name="tarefa",
+            name="projeto",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="apontamentos",
+                to="usuarios.projeto",
+            ),
         ),
     ]
