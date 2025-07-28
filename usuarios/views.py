@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 
+from usuarios.models import Tarefa
 from usuarios.models import Projeto
 
 
@@ -104,3 +105,8 @@ def logout(request):
 def projetos(request):
     projetos = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
     return render(request, "projetos.html", {"projetos": projetos})
+
+
+def listaTarefas(request):
+    listaTarefas = Tarefa.objects.all()
+    return render(request, "listaTarefas.html", {"lista": Tarefa})
