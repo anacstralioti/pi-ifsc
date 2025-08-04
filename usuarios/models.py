@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import (
     User,
-)  # Importa o modelo de usuário padrão do Django
+) 
 
 
 class Projeto(models.Model):

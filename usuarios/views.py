@@ -107,6 +107,6 @@ def projetos(request):
     return render(request, "projetos.html", {"projetos": projetos})
 
 
-def listaTarefas(request):
-    listaTarefas = Tarefa.objects.all()
-    return render(request, "listaTarefas.html", {"lista": Tarefa})
+def lista_tarefas(request):
+    lista_tarefas = Tarefa.objects.all()
+    return render(request, "listaTarefas.html", {"tarefas": lista_tarefas})
