@@ -1,67 +1,207 @@
- {%load static %}
-
+{% load static %} 
 {% block head %}
-<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}lista de Tarefas{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" 
-    rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" 
-    crossorigin="anonymous">
-    <link rel="icon" href="{% static 'images/icon.png' %}" type="image/png" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{% block title %}Lista de Tarefas{% endblock %}</title>
+<link rel="icon" href="{% static 'images/icon.png' %}" type="image/png" />
+<script src="https://cdn.tailwindcss.com"></script>
 {% endblock head %}
 
 {% block header_right_content %}
-<nav class="shadow-sm p-3 mb-5 bg-body-tertiary rounded navbar bg-body-tertiary">
-  <div class="container-fluid">
-    <a href="{% url 'home' %}" class="flex items-center">
-            <img
-              src="{% static 'images/logo.png' %}"
-              alt="Produtiva Logo"
-              class="h-12" width = "152.88" heigth = "48"
-            />
-          </a>
+<nav class="shadow-sm p-3 mb-5 bg-white rounded-lg">
+  <div class="container mx-auto flex items-center justify-between">
+    <a href="{% url 'projetos' %}" class="flex items-center">
+      <img
+        src="{% static 'images/logo.png' %}"
+        alt="Produtiva Logo"
+        class="h-12"
+        width="152.88"
+        heigth="48"
+      />
+    </a>
 
-    <form class="d-flex ms-auto" method="GET" action="{% url 'listaTarefas' %}">
-       <input
-          class="form-control me-2"
-          type="search"
-          name="q"
-          placeholder="Pesquisar tarefas"
-          aria-label="Pesquisar tarefas"
-          value="{{ request.GET.q|default:'' }}"
-          />
-        <button class="btn btn-primary" type="submit">Buscar</button>
+    <form
+      class="flex ml-auto items-center space-x-2"
+      method="GET"
+      action="{% url 'listaTarefas' %}"
+    >
+      <input
+        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        type="search"
+        name="q"
+        placeholder="Pesquisar tarefas"
+        aria-label="Pesquisar tarefas"
+        value="{{ request.GET.q|default:'' }}"
+      />
+      <button
+        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        type="submit"
+      >
+        Buscar
+      </button>
     </form>
   </div>
 </nav>
-{% endblock header_right_content %} 
+{% endblock header_right_content %} {% block body %}
+<div class="flex min-h-screen bg-gray-100 p-6">
+  <div
+    class="w-1/4 bg-white p-6 rounded-lg shadow-md border border-gray-200 mr-6 h-fit"
+  >
+    <a
+      href="#"
+      id="novaTarefaBtn"
+      class="flex items-center justify-center w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+    >
+      <svg
+        class="w-5 h-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        ></path>
+      </svg>
+      Nova Tarefa
+    </a>
+  </div>
+  <div class="flex-1 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+    <h1 class="text-3xl font-bold mb-4">Lista de Tarefas</h1>
+    <p class="font-semibold mb-6">Tarefas encontradas: {{ tarefas|length }}</p>
 
-{% block body %}
-<main class="container" style="padding-top: 5.5rem;">
-  <h1>Lista de Tarefas</h1>
-  <p class="fw-bold">Tarefas encontradas: {{ tarefas|length }}</p>
+    {% if tarefas %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 rounded-lg shadow-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 border-b text-left">Nome</th>
+            <th class="px-4 py-2 border-b text-left">Descrição</th>
+            <th class="px-4 py-2 border-b text-left">Estimativa de Horas</th>
+            <th class="px-4 py-2 border-b text-left">Categoria</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tarefa in tarefas %}
+          <tr
+            class="hover:bg-gray-50 {% if tarefa.categoria == 'vermelho' %}bg-red-100{% elif tarefa.categoria == 'laranja' %}bg-orange-100{% elif tarefa.categoria == 'amarelo' %}bg-yellow-100{% elif tarefa.categoria == 'verde' %}bg-green-100{% endif %}"
+          >
+            <td class="px-4 py-2 border-b">{{ tarefa.nome_tarefa }}</td>
+            <td class="px-4 py-2 border-b">
+              {{ tarefa.descricao|default:"-" }}
+            </td>
+            <td class="px-4 py-2 border-b">
+              {{ tarefa.estimativa_horas}}
+            </td>
+            <td class="px-4 py-2 border-b font-semibold">
+              {{ tarefa.get_categoria_display }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-10">
+      <svg
+        class="mx-auto h-12 w-12 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        ></path>
+      </svg>
+      <h3 class="mt-2 text-lg font-medium text-gray-900">
+        Nenhuma tarefa encontrada
+      </h3>
+      <p class="mt-1 text-gray-500">Comece criando uma nova tarefa.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
 
-  <ul class="list-group">
-    {% for tarefa in tarefas %}
-    <li class="list-group-item flush" aria-current="true">{{ tarefa.nome_tarefa }}</li>
-    {% empty %}
-    <li class="list-group-item text-muted">Nenhuma tarefa encontrada.</li>
-    {% endfor %}
-  </ul>
-</main>
+<div
+  id="novoTarefaModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+  >
+    <h3 class="text-lg font-semibold mb-4">Adicionar Nova Tarefa</h3>
+    <form action="{% url 'listaTarefas' %}" method="post">
+      {% csrf_token %}
+      <input
+        type="text"
+        name="nome_tarefa"
+        placeholder="Nome da Tarefa"
+        class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300 placeholder:text-gray-500 focus:outline-2 focus:outline-indigo-500"
+        required
+      />
+      <input
+        type="text"
+        name="descricao_tarefa"
+        placeholder="Descrição da tarefa"
+        class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300 placeholder:text-gray-500 focus:outline-2 focus:outline-indigo-500"
+        required
+      />
+       <input
+        type="time"
+        name="tempo_estimado"
+        placeholder="Tempo estimado da tarefa"
+        class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300 placeholder:text-gray-500 focus:outline-2 focus:outline-indigo-500"
+        required
+      />
+       <select
+        name="categoria"
+        class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-500"
+        required
+      >
+        <option value="">Selecione uma categoria</option>
+        <option value="vermelho">Vermelho</option>
+        <option value="laranja">Laranja</option>
+        <option value="amarelo">Amarelo</option>
+        <option value="verde">Verde</option>
+      </select>
 
-{% block footer %}
-   <div class="container mx-auto px-4 bg-gray-200 py-4 shadow-md">
-        <div class="flex flex-col items-center text-center">
-          <div class="mb-6">
-            <p class="mt-2 text-gray-600">&copy; 2025 - Sistema Produtiva</p>
-            <p class="mt-2 text-gray-600">
-              Desenvolvido por Ana Carolina e Stephane Beatriz
-            </p>
-          </div>
-        </div>
+      <div class="flex justify-end mt-4">
+        <button
+          type="button"
+          id="cancelNovaTarefa"
+          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 hover:bg-gray-300"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+        >
+          Criar
+        </button>
       </div>
-{% endblock footer %}
+    </form>
+  </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script></script>
+<footer class="mt-10">
+  <div class="container mx-auto px-4 bg-gray-200 py-4 shadow-md rounded-lg">
+    <div class="flex flex-col items-center text-center">
+      <div class="mb-6">
+        <p class="mt-2 text-gray-600">&copy; 2025 - Sistema Produtiva</p>
+        <p class="mt-2 text-gray-600">
+          Desenvolvido por Ana Carolina e Stephane Beatriz
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/projeto.js' %}"></script>
 {% endblock body %}

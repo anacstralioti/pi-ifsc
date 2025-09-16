@@ -109,4 +109,33 @@ def projetos(request):
 
 def lista_tarefas(request):
     lista_tarefas = Tarefa.objects.all()
-    return render(request, "listaTarefas.html", {"tarefas": lista_tarefas})
+    tarefa = None
+    if request.method == 'POST':
+        nome_tarefa = request.POST.get('nome_tarefa')
+        descricao_tarefa = request.POST.get('descricao_tarefa')
+        tempo_estimado = request.POST.get('tempo_estimado')
+        categoria = request.POST.get('categoria')
+
+    try:
+        projeto_padrao = Projeto.objects.first()
+        if not projeto_padrao:
+            projeto_padrao = Projeto.objects.create(
+                nome_projeto ="Projeto padrão",
+                usuario=request.user
+            )
+            tarefa = Tarefa(
+                nome_tarefa = nome_tarefa,
+                descricao = descricao_tarefa,
+                estimativa_horas = tempo_estimado,
+                categoria=categoria,
+                projeto=projeto_padrao,
+                usuario=request.user
+            )
+        tarefa.save()
+        return redirect('listatarefas')
+    except Exception as e:
+        print(f"Erro: {e}")
+
+    return render(request, "listaTarefas.html",{
+        "tarefas": lista_tarefas,
+    })
