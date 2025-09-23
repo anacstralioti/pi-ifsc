@@ -5,8 +5,7 @@ Projetos - Produtiva{% endblock %} {% block header_right_content %}
   <div
     class="h-10 w-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold"
   >
-    {% if user.first_name and user.last_name %} {{ user.first_name.0 }} {{
-    user.last_name.0 }} {% else %}
+    {% if user.first_name and user.last_name %} {% else %}
     <i class="fa-solid fa-user"></i>
     {% endif %}
   </div>
@@ -137,7 +136,7 @@ Projetos - Produtiva{% endblock %} {% block header_right_content %}
         />
         <div class="flex items-center space-x-3">
           <a
-            href="{% url 'relatorio_projeto' projeto.id %}"
+            href="{% url 'projetos' %}"
             class="px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-600"
             >Relatório</a
           >

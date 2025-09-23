@@ -107,35 +107,37 @@ def projetos(request):
     return render(request, "projetos.html", {"projetos": projetos})
 
 
+@login_required
 def lista_tarefas(request):
-    lista_tarefas = Tarefa.objects.all()
-    tarefa = None
-    if request.method == 'POST':
-        nome_tarefa = request.POST.get('nome_tarefa')
-        descricao_tarefa = request.POST.get('descricao_tarefa')
-        tempo_estimado = request.POST.get('tempo_estimado')
-        categoria = request.POST.get('categoria')
+    tarefas = Tarefa.objects.filter(usuario=request.user).order_by('nome_tarefa')
 
-    try:
-        projeto_padrao = Projeto.objects.first()
-        if not projeto_padrao:
-            projeto_padrao = Projeto.objects.create(
-                nome_projeto ="Projeto padrão",
+    if request.method == 'POST':
+        try:
+            nome_tarefa = request.POST.get('nome_tarefa')
+            descricao = request.POST.get('descricao')
+            estimativa_horas = request.POST.get('estimativa_horas') 
+            categoria = request.POST.get('categoria')
+            projeto_padrao, created = Projeto.objects.get_or_create(
+                nome_projeto="Projeto padrão",
                 usuario=request.user
             )
-            tarefa = Tarefa(
-                nome_tarefa = nome_tarefa,
-                descricao = descricao_tarefa,
-                estimativa_horas = tempo_estimado,
+
+            Tarefa.objects.create(
+                nome_tarefa=nome_tarefa,
+                descricao=descricao,
+                estimativa_horas=estimativa_horas, 
                 categoria=categoria,
                 projeto=projeto_padrao,
                 usuario=request.user
             )
-        tarefa.save()
-        return redirect('listatarefas')
-    except Exception as e:
-        print(f"Erro: {e}")
+            
+            messages.success(request, 'Tarefa criada com sucesso!')
+            return redirect('listatarefas')
 
-    return render(request, "listaTarefas.html",{
-        "tarefas": lista_tarefas,
+        except Exception as e:
+            messages.error(request, f"Erro ao criar a tarefa: {e}")
+            print(f"Erro: {e}")
+
+    return render(request, "listaTarefas.html", {
+        "tarefas": tarefas,
     })
