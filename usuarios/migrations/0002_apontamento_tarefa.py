@@ -36,10 +36,10 @@ class Migration(migrations.Migration):
                     "categoria",
                     models.CharField(
                         choices=[
-                            ("vermelho", "Vermelho"),
-                            ("laranja", "Laranja"),
-                            ("amarelo", "Amarelo"),
-                            ("verde", "Verde"),
+                           ("URGENTE E IMPORTANTE","Urgente e Importante"),
+                           ("URGENTE NÃO IMPORTANTE", "Urgente não importante"),
+                           ("IMPORTANTE NÃO URGENTE", "Importante não Urgente"),
+                           ("IMPORTANTE E URGENTE", "Importante e Urgente"),
                         ],
                         max_length=20,
                     ),
