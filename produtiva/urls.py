@@ -7,4 +7,5 @@ urlpatterns = [
     path("logout/", views.logout, name="logout"),
     path("projetos/", views.projetos, name="projetos"),
     path("listatarefas/", views.lista_tarefas, name="listaTarefas"),
+    path("projetos/<int:projeto_id>/tarefas/", views.tarefas_por_projeto, name="tarefas_por_projeto"),
 ]

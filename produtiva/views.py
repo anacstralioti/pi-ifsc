@@ -100,12 +100,29 @@ def logout(request):
 def logout(request):
     return redirect("projetos.html")
 
-
 @login_required
 def projetos(request):
-    projetos = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
-    return render(request, "projetos.html", {"projetos": projetos})
+    if request.method == 'POST':
+        nome_recebido = request.POST.get('nome_projeto')
+        descricao_recebida = request.POST.get('descricao', '') 
 
+        if nome_recebido and nome_recebido.strip():
+            try:
+                Projeto.objects.create(
+                    nome_projeto=nome_recebido,
+                    descricao=descricao_recebida,  # Adicionado
+                    usuario=request.user
+                )
+                messages.success(request, 'Projeto criado com sucesso!')
+            except Exception as e:
+                messages.error(request, f'Ocorreu um erro no servidor: {e}')
+        else:
+            messages.error(request, 'O nome do projeto não pode estar em branco.')
+        
+        return redirect('projetos')
+
+    projetos_do_usuario = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
+    return render(request, "projetos.html", {"projetos": projetos_do_usuario})
 
 @login_required
 def lista_tarefas(request):
@@ -141,3 +158,35 @@ def lista_tarefas(request):
     return render(request, "listaTarefas.html", {
         "tarefas": tarefas,
     })
+
+@login_required
+def tarefas_por_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+
+    if request.method == 'POST':        
+        nome_tarefa = request.POST.get('nome_tarefa')
+        descricao = request.POST.get('descricao')
+        estimativa_horas = request.POST.get('estimativa_horas') 
+        categoria = request.POST.get('categoria')
+
+        if nome_tarefa and estimativa_horas and categoria:
+            try:
+                Tarefa.objects.create(
+                    nome_tarefa=nome_tarefa,
+                    descricao=descricao,
+                    estimativa_horas=estimativa_horas, 
+                    categoria=categoria,
+                    projeto=projeto,
+                    usuario=request.user
+                )
+                messages.success(request, 'Tarefa adicionada ao projeto com sucesso!')
+            except Exception as e:
+                messages.error(request, f'Erro ao salvar: {e}')
+        else:
+            messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
+        
+        return redirect('tarefas_por_projeto', projeto_id=projeto.id)
+
+    tarefas = Tarefa.objects.filter(projeto=projeto).order_by('nome_tarefa')
+    context = { 'projeto': projeto, 'tarefas': tarefas }
+    return render(request, 'tarefas_por_projeto.html', context)

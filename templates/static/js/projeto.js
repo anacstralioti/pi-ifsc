@@ -1,19 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('novoTarefaModal');
-    const btn = document.getElementById('novaTarefaBtn');
-    const cancelBtn = document.getElementById('cancelNovaTarefa');
+    // Seleciona os elementos do modal de PROJETO
+    const modal = document.getElementById('novoProjetoModal');
+    const btn = document.getElementById('novoProjetoBtn');
+    const cancelBtn = document.getElementById('cancelNovoProjeto');
 
-    btn.addEventListener('click', function() {
-    modal.classList.remove('hidden');
-    });
+    // Garante que os elementos existem antes de adicionar os listeners
+    if (btn) {
+        btn.addEventListener('click', function(event) {
+            event.preventDefault(); // Impede o link de recarregar a página
+            modal.classList.remove('hidden');
+        });
+    }
 
-    cancelBtn.addEventListener('click', function() {
-    modal.classList.add('hidden');
-    });
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+    }
 
     window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-    modal.classList.add('hidden');
-    }
+        if (event.target === modal) {
+            modal.classList.add('hidden');
+        }
     });
 });

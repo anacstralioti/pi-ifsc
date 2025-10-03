@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tarefas de {{ projeto.nome_projeto }}{% endblock %}
+
+{% block header_right_content %}
+<div class="flex items-center space-x-2">
+  {% if user.is_authenticated %}
+    <span class="text-gray-800 font-medium hidden md:block">{{ user.first_name }}</span>
+    <a href="{% url 'logout' %}" class="ml-2 text-red-600 hover:text-red-800 text-sm font-semibold hidden md:block">Sair</a>
+  {% else %}
+    <a href="{% url 'login' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+      Faça Login
+    </a>
+  {% endif %}
+</div>
+{% endblock header_right_content %}
+
+{% block 'body' %}
+<div class="flex min-h-screen bg-gray-100 p-6">
+  
+  <div class="w-1/4 bg-white p-6 rounded-lg shadow-md border border-gray-200 mr-6 h-fit">
+    <a href="#" id="novaTarefaBtn" class="flex items-center justify-center w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+      Nova Tarefa
+    </a>
+    <a href="{% url 'projetos' %}" class="mt-4 block text-center text-sm text-indigo-600 hover:text-indigo-800 hover:underline">
+      &larr; Voltar para todos os projetos
+    </a>
+  </div>
+
+  <div class="flex-1 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+    <h1 class="text-3xl font-bold mb-2"><span class="text-indigo-600">{{ projeto.nome_projeto }}</span></h1>
+    <p class="text-gray-600 mb-6">{{ projeto.descricao|default_if_none:"" }}</p>
+    
+    <p class="font-semibold mb-6">Tarefas encontradas: {{ tarefas|length }}</p>
+
+    {% if tarefas %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 rounded-lg shadow-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 border-b text-left">Nome</th>
+            <th class="px-4 py-2 border-b text-left">Descrição</th>
+            <th class="px-4 py-2 border-b text-left">Estimativa de Horas</th>
+            <th class="px-4 py-2 border-b text-left">Categoria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tbody>
+            {% for tarefa in tarefas %}
+            <tr class="hover:bg-gray-100 
+                {% if tarefa.categoria == 'URGENTE E IMPORTANTE' %}bg-red-200 text-red-900
+                {% elif tarefa.categoria == 'IMPORTANTE NÃO URGENTE' %}bg-yellow-200 text-yellow-900
+                {% elif tarefa.categoria == 'URGENTE NÃO IMPORTANTE' %}bg-blue-200 text-blue-900
+                {% endif %}
+            ">
+                <td class="px-4 py-2 border-b">{{ tarefa.nome_tarefa }}</td>
+                <td class="px-4 py-2 border-b">{{ tarefa.descricao|default:"-" }}</td>
+                <td class="px-4 py-2 border-b">{{ tarefa.estimativa_horas }}</td>
+                <td class="px-4 py-2 border-b font-semibold">{{ tarefa.get_categoria_display }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-10">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+      <h3 class="mt-2 text-lg font-medium text-gray-900">Nenhuma tarefa encontrada para este projeto</h3>
+      <p class="mt-1 text-gray-500">Comece criando uma nova tarefa clicando no botão ao lado.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div id="novoTarefaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <h3 class="text-lg font-semibold mb-4">Adicionar Tarefa ao Projeto "{{ projeto.nome_projeto }}"</h3>
+    
+    <form action="{% url 'tarefas_por_projeto' projeto.id %}" method="post">
+      {% csrf_token %}
+      <input type="text" name="nome_tarefa" placeholder="Nome da Tarefa" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2" required />
+      <input type="text" name="descricao" placeholder="Descrição da tarefa" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" />
+      <input type="time" name="estimativa_horas" placeholder="Tempo estimado" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required />
+      <select name="categoria" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required>
+        <option value="">Selecione uma categoria</option>
+        <option value="URGENTE E IMPORTANTE">Urgente e Importante</option>
+        <option value="IMPORTANTE NÃO URGENTE">Importante e Não Urgente</option>
+        <option value="URGENTE NÃO IMPORTANTE">Urgente e Não importante</option>
+        <option value="NÃO URGENTE E NÃO IMPORTANTE">Não Urgente e Não Importante</option>
+      </select>
+
+      <div class="flex justify-end mt-4">
+        <button type="button" id="cancelNovaTarefa" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 hover:bg-gray-300">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Criar Tarefa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('novoTarefaModal');
+    const btn = document.getElementById('novaTarefaBtn');
+    const cancelBtn = document.getElementById('cancelNovaTarefa');
+    if (btn) {
+      btn.addEventListener('click', function(e) { e.preventDefault(); modal.classList.remove('hidden'); });
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() { modal.classList.add('hidden'); });
+    }
+    window.addEventListener('click', function(event) { if (event.target === modal) { modal.classList.add('hidden'); } });
+  });
+</script>
+{% endblock 'body' %}

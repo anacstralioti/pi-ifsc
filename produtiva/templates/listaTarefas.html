@@ -1,48 +1,21 @@
-{% load static %} 
-{% block head %}
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{% block title %}Lista de Tarefas{% endblock %}</title>
-<link rel="icon" href="{% static 'images/icon.png' %}" type="image/png" />
-<script src="https://cdn.tailwindcss.com"></script>
-{% endblock head %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gerenciamento de Projetos - Produtiva{% endblock %}
 
 {% block header_right_content %}
-<nav class="shadow-sm p-3 mb-5 bg-white rounded-lg">
-  <div class="container mx-auto flex items-center justify-between">
-    <a href="{% url 'projetos' %}" class="flex items-center">
-      <img
-        src="{% static 'images/logo.png' %}"
-        alt="Produtiva Logo"
-        class="h-12"
-        width="152.88"
-        heigth="48"
-      />
+<div class="flex items-center space-x-2">
+  {% if user.is_authenticated %}
+    <span class="text-gray-800 font-medium hidden md:block">{{ user.first_name }}</span>
+    <a href="{% url 'logout' %}" class="ml-2 text-red-600 hover:text-red-800 text-sm font-semibold hidden md:block">Sair</a>
+  {% else %}
+    <a href="{% url 'login' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+      Faça Login
     </a>
+  {% endif %}
+</div>
+{% endblock header_right_content %}
 
-    <form
-      class="flex ml-auto items-center space-x-2"
-      method="GET"
-      action="{% url 'listaTarefas' %}"
-    >
-      <input
-        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        type="search"
-        name="q"
-        placeholder="Pesquisar tarefas"
-        aria-label="Pesquisar tarefas"
-        value="{{ request.GET.q|default:'' }}"
-      />
-      <button
-        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        type="submit"
-      >
-        Buscar
-      </button>
-    </form>
-  </div>
-</nav>
-{% endblock header_right_content %} {% block body %}
 <div class="flex min-h-screen bg-gray-100 p-6">
   <div
     class="w-1/4 bg-white p-6 rounded-lg shadow-md border border-gray-200 mr-6 h-fit"

@@ -42,9 +42,15 @@
     <header class="bg-gray-200 py-4 shadow-md">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <div class="flex items-center">
-                <a href="{% url 'home' %}" class="flex items-center"> {# Use 'dashboard' ou o nome da sua URL inicial #}
-                    <img src="{% static 'images/logo.png' %}" alt="Produtiva Logo" class="h-12">
-                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'projetos' %}" class="flex items-center">
+                        <img src="{% static 'images/logo.png' %}" alt="Produtiva Logo" class="h-12">
+                    </a>
+                {% else %}
+                    <a href="{% url 'home' %}" class="flex items-center">
+                        <img src="{% static 'images/logo.png' %}" alt="Produtiva Logo" class="h-12">
+                    </a>
+                {% endif %}
             </div>
             <div>
                 {% block header_right_content %}
