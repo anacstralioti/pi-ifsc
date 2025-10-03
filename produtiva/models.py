@@ -3,7 +3,6 @@ from django.contrib.auth.models import (
     User,
 ) 
 
-
 class Projeto(models.Model):
     nome_projeto = models.CharField(
         max_length=255, blank=False, null=False, verbose_name="Nome do Projeto"
