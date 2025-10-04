@@ -1,13 +1,13 @@
-
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.views.decorators.cache import cache_control
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.contrib.messages import constants
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-
 from produtiva.models import Tarefa, Projeto
 
 
@@ -88,18 +88,14 @@ def login(request):
         messages.add_message(request, constants.ERROR, "E-mail ou senha inválidos.")
         return render(request, "login.html", {"data": {"login": email}})
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def logout(request):
     auth.logout(request)
     messages.add_message(request, constants.INFO, "Você foi desconectado.")
     return redirect("login")
 
-
-@login_required
-def logout(request):
-    return redirect("projetos.html")
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def projetos(request):
     if request.method == 'POST':
@@ -124,6 +120,7 @@ def projetos(request):
     projetos_do_usuario = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
     return render(request, "projetos.html", {"projetos": projetos_do_usuario})
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def lista_tarefas(request):
     tarefas = Tarefa.objects.filter(usuario=request.user).order_by('nome_tarefa')
@@ -159,6 +156,7 @@ def lista_tarefas(request):
         "tarefas": tarefas,
     })
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def tarefas_por_projeto(request, projeto_id):
     projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
@@ -190,3 +188,50 @@ def tarefas_por_projeto(request, projeto_id):
     tarefas = Tarefa.objects.filter(projeto=projeto).order_by('nome_tarefa')
     context = { 'projeto': projeto, 'tarefas': tarefas }
     return render(request, 'tarefas_por_projeto.html', context)
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def perfil(request):
+    user = request.user
+
+    if request.method == 'POST':
+        # Primeiro, valida e guarda as informações do perfil.
+        email = request.POST.get('email')
+        if User.objects.filter(email=email).exclude(pk=user.pk).exists():
+            messages.error(request, 'Este e-mail já está em uso por outro utilizador.')
+            password_form = PasswordChangeForm(user, request.POST)
+            context = {'password_form': password_form, 'user': user}
+            return render(request, 'perfil.html', context)
+        
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = email
+        user.save()
+
+        # Depois, lida com a tentativa de alteração de senha.
+        password_form = PasswordChangeForm(user, request.POST)
+        old_password = request.POST.get('old_password')
+
+        if old_password:  # O utilizador está a tentar alterar a senha
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                # Sucesso em ambas as operações
+                messages.success(request, 'Perfil e senha atualizados com sucesso!')
+                return redirect('perfil')
+            else:
+                # Falha na alteração da senha. Mostra apenas a mensagem de erro.
+                messages.error(request, 'Não foi possível alterar a sua senha. Verifique os erros abaixo.')
+                context = {'password_form': password_form, 'user': user}
+                return render(request, 'perfil.html', context)
+        else:
+            # A senha não foi alterada, então a atualização do perfil foi a única ação bem-sucedida.
+            messages.success(request, 'As suas informações de perfil foram salvas!')
+            return redirect('perfil')
+
+    # Para pedidos GET (quando a página é carregada pela primeira vez)
+    else:
+        password_form = PasswordChangeForm(user)
+
+    context = {'password_form': password_form, 'user': user}
+    return render(request, 'perfil.html', context)
