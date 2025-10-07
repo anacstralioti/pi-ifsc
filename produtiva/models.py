@@ -33,13 +33,18 @@ class Tarefa(models.Model):
     categoria = models.CharField(
         max_length=30,
         choices=[
-            ("URGENTE E IMPORTANTE","Urgente e Importante"),
-            ("URGENTE NÃO IMPORTANTE", "Urgente não importante"),
-            ("IMPORTANTE NÃO URGENTE", "Importante não Urgente"),
-            ("IMPORTANTE E URGENTE", "Importante e Urgente"),
+            ("URGENTE_IMPORTANTE","Importante e Urgente"),
+            ("IMPORTANTE_NAO_URGENTE", "Importante e Não Urgente"),
+            ("URGENTE_NAO_IMPORTANTE", "Urgente e Não Importante"),
+            ("NAO_IMPORTANTE_NAO_URGENTE", "Não Importante e Não Urgente"),
         ],
     )
     estimativa_horas = models.TimeField(null=False, blank=False)
+    horas_gastas = models.TimeField(
+        null=True, 
+        blank=False, 
+        default='00:00:00' 
+    ) 
     projeto = models.ForeignKey(
         "Projeto", on_delete=models.CASCADE, related_name="tarefas"
     )

@@ -106,7 +106,7 @@ def projetos(request):
             try:
                 Projeto.objects.create(
                     nome_projeto=nome_recebido,
-                    descricao=descricao_recebida,  # Adicionado
+                    descricao=descricao_recebida,
                     usuario=request.user
                 )
                 messages.success(request, 'Projeto criado com sucesso!')
@@ -130,6 +130,7 @@ def lista_tarefas(request):
             nome_tarefa = request.POST.get('nome_tarefa')
             descricao = request.POST.get('descricao')
             estimativa_horas = request.POST.get('estimativa_horas') 
+            horas_gastas = request.POST.get('horas_gastas')
             categoria = request.POST.get('categoria')
             projeto_padrao, created = Projeto.objects.get_or_create(
                 nome_projeto="Projeto padrão",
@@ -140,6 +141,7 @@ def lista_tarefas(request):
                 nome_tarefa=nome_tarefa,
                 descricao=descricao,
                 estimativa_horas=estimativa_horas, 
+                horas_gastas=horas_gastas,
                 categoria=categoria,
                 projeto=projeto_padrao,
                 usuario=request.user
@@ -165,6 +167,7 @@ def tarefas_por_projeto(request, projeto_id):
         nome_tarefa = request.POST.get('nome_tarefa')
         descricao = request.POST.get('descricao')
         estimativa_horas = request.POST.get('estimativa_horas') 
+        horas_gastas = request.POST.get('horas_gastas')
         categoria = request.POST.get('categoria')
 
         if nome_tarefa and estimativa_horas and categoria:
@@ -173,6 +176,7 @@ def tarefas_por_projeto(request, projeto_id):
                     nome_tarefa=nome_tarefa,
                     descricao=descricao,
                     estimativa_horas=estimativa_horas, 
+                    horas_gastas=horas_gastas,
                     categoria=categoria,
                     projeto=projeto,
                     usuario=request.user
@@ -195,7 +199,6 @@ def perfil(request):
     user = request.user
 
     if request.method == 'POST':
-        # Primeiro, valida e guarda as informações do perfil.
         email = request.POST.get('email')
         if User.objects.filter(email=email).exclude(pk=user.pk).exists():
             messages.error(request, 'Este e-mail já está em uso por outro utilizador.')
@@ -208,28 +211,23 @@ def perfil(request):
         user.email = email
         user.save()
 
-        # Depois, lida com a tentativa de alteração de senha.
         password_form = PasswordChangeForm(user, request.POST)
         old_password = request.POST.get('old_password')
 
-        if old_password:  # O utilizador está a tentar alterar a senha
+        if old_password:
             if password_form.is_valid():
                 user = password_form.save()
                 update_session_auth_hash(request, user)
-                # Sucesso em ambas as operações
                 messages.success(request, 'Perfil e senha atualizados com sucesso!')
                 return redirect('perfil')
             else:
-                # Falha na alteração da senha. Mostra apenas a mensagem de erro.
                 messages.error(request, 'Não foi possível alterar a sua senha. Verifique os erros abaixo.')
                 context = {'password_form': password_form, 'user': user}
                 return render(request, 'perfil.html', context)
         else:
-            # A senha não foi alterada, então a atualização do perfil foi a única ação bem-sucedida.
             messages.success(request, 'As suas informações de perfil foram salvas!')
             return redirect('perfil')
 
-    # Para pedidos GET (quando a página é carregada pela primeira vez)
     else:
         password_form = PasswordChangeForm(user)
 
