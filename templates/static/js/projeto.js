@@ -1,13 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Seleciona os elementos do modal de PROJETO
     const modal = document.getElementById('novoProjetoModal');
     const btn = document.getElementById('novoProjetoBtn');
     const cancelBtn = document.getElementById('cancelNovoProjeto');
 
-    // Garante que os elementos existem antes de adicionar os listeners
     if (btn) {
         btn.addEventListener('click', function(event) {
-            event.preventDefault(); // Impede o link de recarregar a página
+            event.preventDefault(); 
             modal.classList.remove('hidden');
         });
     }
@@ -22,5 +20,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target === modal) {
             modal.classList.add('hidden');
         }
+    });
+
+    document.querySelectorAll('.delete-project-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url;
+            if (confirm("Tem certeza que deseja apagar este projeto?")) {
+                window.location.href = url;
+            }
+        });
+    });
+
+    const messages = document.querySelectorAll('.mb-4.space-y-2 .w-full');
+    messages.forEach(msg => {
+        setTimeout(() => {
+            msg.classList.add('transition-opacity', 'duration-500');
+            msg.style.opacity = 0;
+            setTimeout(() => msg.remove(), 500); 
+        }, 3000); 
     });
 });

@@ -95,7 +95,7 @@ def login(request):
             messages.add_message(
                 request, constants.SUCCESS, f"Bem-vindo, {user.first_name}!"
             )
-            return redirect("/produtiva/projetos/")
+            return redirect("/produtiva/templates/projetos/")
 
         messages.add_message(request, constants.ERROR, "E-mail ou senha inválidos.")
         return render(request, "login.html", {"data": {"login": email}})
@@ -131,6 +131,13 @@ def projetos(request):
 
     projetos_do_usuario = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
     return render(request, "projetos.html", {"projetos": projetos_do_usuario})
+
+@login_required
+def delete_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto.delete()
+    messages.success(request, f'Projeto "{projeto.nome_projeto}" removido com sucesso!')
+    return redirect('projetos')
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
