@@ -1,19 +1,46 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('novoTarefaModal');
-    const btn = document.getElementById('novaTarefaBtn');
-    const cancelBtn = document.getElementById('cancelNovaTarefa');
+  const modal = document.getElementById('novoTarefaModal');
+  const cancelBtn = document.getElementById('cancelNovaTarefa');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalSubmitBtn = document.getElementById('modalSubmitBtn');
 
-    btn.addEventListener('click', function() {
+  const novaTarefaBtn = document.getElementById('novaTarefaBtn');
+  novaTarefaBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    modalTitle.textContent = "Adicionar Tarefa ao Projeto";
+    modalSubmitBtn.textContent = "Criar Tarefa";
+
+    document.getElementById('tarefa_id').value = "";
+    document.getElementById('nome_tarefa').value = "";
+    document.getElementById('descricao').value = "";
+    document.getElementById('estimativa_horas').value = "";
+    document.getElementById('horas_gastas').value = "00:00";
+    document.getElementById('categoria').value = "";
+
     modal.classList.remove('hidden');
-    });
+  });
 
-    cancelBtn.addEventListener('click', function() {
-    modal.classList.add('hidden');
-    });
+  document.querySelectorAll('.editar-tarefa').forEach(button => {
+    button.addEventListener('click', function() {
+      modalTitle.textContent = "Editar Tarefa";
+      modalSubmitBtn.textContent = "Salvar Alterações";
 
-    window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-    modal.classList.add('hidden');
-    }
+      document.getElementById('tarefa_id').value = this.dataset.id;
+      document.getElementById('nome_tarefa').value = this.dataset.nome;
+      document.getElementById('descricao').value = this.dataset.descricao;
+      document.getElementById('estimativa_horas').value = this.dataset.estimativa;
+      document.getElementById('horas_gastas').value = this.dataset.horas;
+      document.getElementById('categoria').value = this.dataset.categoria;
+
+      modal.classList.remove('hidden');
     });
+  });
+
+  cancelBtn.addEventListener('click', function() {
+    modal.classList.add('hidden');
+  });
+
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) modal.classList.add('hidden');
+  });
 });

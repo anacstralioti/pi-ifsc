@@ -112,7 +112,7 @@ def logout(request):
 def projetos(request):
     if request.method == 'POST':
         nome_recebido = request.POST.get('nome_projeto')
-        descricao_recebida = request.POST.get('descricao', '') 
+        descricao_recebida = request.POST.get('descricao', '')      
 
         if nome_recebido and nome_recebido.strip():
             try:
@@ -142,7 +142,7 @@ def lista_tarefas(request):
             nome_tarefa = request.POST.get('nome_tarefa')
             descricao = request.POST.get('descricao')
             estimativa_horas = request.POST.get('estimativa_horas') 
-            horas_gastas = request.POST.get('horas_gastas')
+            horas_gastas = request.POST.get('horas_gastas') or "00:00"
             categoria = request.POST.get('categoria')
             projeto_padrao, created = Projeto.objects.get_or_create(
                 nome_projeto="Projeto padrão",
@@ -174,36 +174,65 @@ def lista_tarefas(request):
 @login_required
 def tarefas_por_projeto(request, projeto_id):
     projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
-
-    if request.method == 'POST':        
+    
+    if request.method == 'POST':
+       
+        tarefa_id = request.POST.get('tarefa_id')
         nome_tarefa = request.POST.get('nome_tarefa')
         descricao = request.POST.get('descricao')
-        estimativa_horas = request.POST.get('estimativa_horas') 
-        horas_gastas = request.POST.get('horas_gastas')
+        estimativa_horas = request.POST.get('estimativa_horas')
+        horas_gastas = request.POST.get('horas_gastas') or "00:00"
         categoria = request.POST.get('categoria')
 
-        if nome_tarefa and estimativa_horas and categoria:
-            try:
-                Tarefa.objects.create(
-                    nome_tarefa=nome_tarefa,
-                    descricao=descricao,
-                    estimativa_horas=estimativa_horas, 
-                    horas_gastas=horas_gastas,
-                    categoria=categoria,
-                    projeto=projeto,
-                    usuario=request.user
-                )
-                messages.success(request, 'Tarefa adicionada ao projeto com sucesso!')
-            except Exception as e:
-                messages.error(request, f'Erro ao salvar: {e}')
-        else:
+
+        if not nome_tarefa or not estimativa_horas or not categoria:
             messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
-        
+            return redirect('tarefas_por_projeto', projeto_id=projeto.id)
+
+        if tarefa_id: 
+            tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+            tarefa.nome_tarefa = nome_tarefa
+            tarefa.descricao = descricao
+            tarefa.estimativa_horas = estimativa_horas
+            tarefa.horas_gastas = horas_gastas
+            tarefa.categoria = categoria
+            tarefa.save()
+            messages.success(request, 'Tarefa atualizada com sucesso!')
+        else:  
+            Tarefa.objects.create(
+                nome_tarefa=nome_tarefa,
+                descricao=descricao,
+                estimativa_horas=estimativa_horas,
+                horas_gastas=horas_gastas,
+                categoria=categoria,
+                projeto=projeto,
+                usuario=request.user
+            )
+            messages.success(request, 'Tarefa adicionada ao projeto com sucesso!')
+
         return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
     tarefas = Tarefa.objects.filter(projeto=projeto).order_by('nome_tarefa')
     context = { 'projeto': projeto, 'tarefas': tarefas }
     return render(request, 'tarefas_por_projeto.html', context)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def editar_tarefa(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+
+    if request.method == "POST":
+        tarefa.nome_tarefa = request.POST.get("nome_tarefa")
+        tarefa.descricao = request.POST.get("descricao")
+        tarefa.estimativa_horas = request.POST.get("estimativa_horas")
+        tarefa.horas_gastas = request.POST.get("horas_gastas") or "00:00"
+        tarefa.categoria = request.POST.get("categoria")
+        tarefa.save()
+        messages.success(request, "Tarefa atualizada com sucesso!")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+    context = {'tarefa': tarefa, 'projeto': tarefa.projeto}
+    return render(request, 'editar_tarefa.html', context)
+
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required

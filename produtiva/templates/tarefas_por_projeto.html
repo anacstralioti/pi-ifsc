@@ -79,6 +79,7 @@
             <th class="px-4 py-2 border-b text-left">Estimativa de Horas</th>
             <th class="px-4 py-2 border-b text-left">Tempo Total Horas</th>
             <th class="px-4 py-2 border-b text-left">Categoria</th>
+            <th class="px-4 py-2 border-b text-left">Editar</th>
           </tr>
         </thead>
         <tbody>
@@ -96,9 +97,24 @@
                 <td class="px-4 py-2 border-b">{{ tarefa.estimativa_horas }}</td>
                 <td class="px-4 py-2 border-b">{{ tarefa.horas_gastas }}</td>
                 <td class="px-4 py-2 border-b font-semibold">{{ tarefa.get_categoria_display }}</td>
+                <td class="px-4 py-2 border-b text-center">
+                  <a href="#" 
+                  class="editar-tarefa text-indigo-600 hover:text-indigo-800"
+                  data-id="{{ tarefa.id }}"
+                  data-nome="{{ tarefa.nome_tarefa }}"
+                  data-descricao="{{ tarefa.descricao }}"
+                  data-estimativa="{{ tarefa.estimativa_horas }}"
+                  data-horas="{{ tarefa.horas_gastas }}"
+                  data-categoria="{{ tarefa.categoria }}">
+                  <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2ZM2 18V7h6.7l.4-.409A4.309 4.309 0 0 1 15.753 7H18v11H2Z"/>
+                    <path d="M8.139 10.411 5.289 13.3A1 1 0 0 0 5 14v2a1 1 0 0 0 1 1h2a1 1 0 0 0 .7-.288l2.886-2.851-3.447-3.45ZM14 8a2.463 2.463 0 0 0-3.484 0l-.971.983 3.468 3.468.987-.971A2.463 2.463 0 0 0 14 8Z"/>
+                  </svg>
+                  </a>
+                </td>
             </tr>
             {% endfor %}
-            </tbody>
+          </tbody>
         </tbody>
       </table>
     </div>
@@ -114,14 +130,17 @@
 
 <div id="novoTarefaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
   <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-    <h3 class="text-lg font-semibold mb-4">Adicionar Tarefa ao Projeto "{{ projeto.nome_projeto }}"</h3>
+    <h3 class="text-lg font-semibold mb-4" id="modalTitle">Adicionar Tarefa ao Projeto "{{ projeto.nome_projeto }}"</h3>
     
     <form action="{% url 'tarefas_por_projeto' projeto.id %}" method="post">
       {% csrf_token %}
-      <input type="text" name="nome_tarefa" placeholder="Nome da Tarefa" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2" required />
-      <input type="text" name="descricao" placeholder="Descrição da tarefa" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" />
-      <input type="time" name="estimativa_horas" placeholder="Tempo estimado" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required />
-      <select name="categoria" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required>
+
+      <input type="hidden" name="tarefa_id" id="tarefa_id" value="" />
+      <input type="text" name="nome_tarefa" id="nome_tarefa" placeholder="Nome da Tarefa" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2" required />
+      <input type="text" name="descricao" id="descricao" placeholder="Descrição da tarefa" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" />
+      <input type="time" name="estimativa_horas" id="estimativa_horas" placeholder="Tempo estimado" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required />
+      <input type="time" name="horas_gastas" id="horas_gastas" placeholder="Tempo utilizado" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" value="00:00" required />
+      <select name="categoria" id="categoria" class="mt-3 block w-full rounded-md bg-gray-100 px-3 py-2" required>
         <option value="">Selecione uma categoria</option>
         <option value="URGENTE_IMPORTANTE">Urgente e Importante</option>
         <option value="IMPORTANTE_NAO_URGENTE">Importante e Não Urgente</option>
@@ -131,24 +150,12 @@
 
       <div class="flex justify-end mt-4">
         <button type="button" id="cancelNovaTarefa" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 hover:bg-gray-300">Cancelar</button>
-        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Criar Tarefa</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" id="modalSubmitBtn">Criar Tarefa</button>
       </div>
     </form>
   </div>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('novoTarefaModal');
-    const btn = document.getElementById('novaTarefaBtn');
-    const cancelBtn = document.getElementById('cancelNovaTarefa');
-    if (btn) {
-      btn.addEventListener('click', function(e) { e.preventDefault(); modal.classList.remove('hidden'); });
-    }
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', function() { modal.classList.add('hidden'); });
-    }
-    window.addEventListener('click', function(event) { if (event.target === modal) { modal.classList.add('hidden'); } });
-  });
-</script>
+
+<script src="{% static 'js/tarefas.js' %}"></script>
 {% endblock 'body' %}
