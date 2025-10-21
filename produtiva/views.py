@@ -53,6 +53,18 @@ def registro(request):
 
         if has_error:
             return render(request, "registro.html", {"data": data})
+        
+        if User.objects.filter(username=email).exists():
+            messages.error(
+                request,
+                "Este e-mail já está cadastrado.",
+                extra_tags="email_error",
+            )
+            has_error = True
+
+        if has_error:
+            return render(request, "registro.html", {"data": data})
+
 
         user = User.objects.create_user(
             username=email,
