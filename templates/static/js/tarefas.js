@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    
     const modal = document.getElementById('novoTarefaModal');
     const cancelBtn = document.getElementById('cancelNovaTarefa');
     const modalTitle = document.getElementById('modalTitle');
@@ -13,8 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('tarefa_id').value = "";
         document.getElementById('nome_tarefa').value = "";
         document.getElementById('descricao').value = "";
-        document.getElementById('estimativa_horas').value = "";
-        document.getElementById('horas_gastas').value = "00:00";
+        document.getElementById('estimativa_horas').value = ""; 
         document.getElementById('categoria').value = "";
 
         modal.classList.remove('hidden');
@@ -25,11 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
             modalTitle.textContent = "Editar Tarefa";
             modalSubmitBtn.textContent = "Salvar Alterações";
 
+            // Preenche o formulário com os dados da tarefa
             document.getElementById('tarefa_id').value = this.dataset.id;
             document.getElementById('nome_tarefa').value = this.dataset.nome;
             document.getElementById('descricao').value = this.dataset.descricao;
             document.getElementById('estimativa_horas').value = this.dataset.estimativa;
-            document.getElementById('horas_gastas').value = this.dataset.horas;
             document.getElementById('categoria').value = this.dataset.categoria;
 
             modal.classList.remove('hidden');
@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target === modal) modal.classList.add('hidden');
     });
 
-   document.addEventListener('DOMContentLoaded', function() {
     const messages = document.querySelectorAll('.mb-4.space-y-2 > div');
 
     messages.forEach(msg => {
@@ -53,8 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
             msg.style.opacity = 0;
             setTimeout(() => {
                 msg.remove();
-            }, 500);
-        }, 3000);
+            }, 500); 
+        }, 3000); 
     });
-});
 });

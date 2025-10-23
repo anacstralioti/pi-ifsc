@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-from produtiva.models import Tarefa, Projeto
-
+from produtiva.models import Apontamento, Tarefa, Projeto
+from django.utils import timezone
 
 def registro(request):
     if request.method == "POST":
@@ -95,7 +95,7 @@ def login(request):
             messages.add_message(
                 request, constants.SUCCESS, f"Bem-vindo, {user.first_name}!"
             )
-            return redirect("/produtiva/templates/projetos/")
+            return redirect("/produtiva/projetos/")
 
         messages.add_message(request, constants.ERROR, "E-mail ou senha inválidos.")
         return render(request, "login.html", {"data": {"login": email}})
@@ -149,7 +149,6 @@ def lista_tarefas(request):
             nome_tarefa = request.POST.get('nome_tarefa')
             descricao = request.POST.get('descricao')
             estimativa_horas = request.POST.get('estimativa_horas') 
-            horas_gastas = request.POST.get('horas_gastas') or "00:00"
             categoria = request.POST.get('categoria')
             projeto_padrao, created = Projeto.objects.get_or_create(
                 nome_projeto="Projeto padrão",
@@ -160,7 +159,6 @@ def lista_tarefas(request):
                 nome_tarefa=nome_tarefa,
                 descricao=descricao,
                 estimativa_horas=estimativa_horas, 
-                horas_gastas=horas_gastas,
                 categoria=categoria,
                 projeto=projeto_padrao,
                 usuario=request.user
@@ -188,7 +186,6 @@ def tarefas_por_projeto(request, projeto_id):
         nome_tarefa = request.POST.get('nome_tarefa')
         descricao = request.POST.get('descricao')
         estimativa_horas = request.POST.get('estimativa_horas')
-        horas_gastas = request.POST.get('horas_gastas') or "00:00"
         categoria = request.POST.get('categoria')
 
 
@@ -201,7 +198,6 @@ def tarefas_por_projeto(request, projeto_id):
             tarefa.nome_tarefa = nome_tarefa
             tarefa.descricao = descricao
             tarefa.estimativa_horas = estimativa_horas
-            tarefa.horas_gastas = horas_gastas
             tarefa.categoria = categoria
             tarefa.save()
             messages.success(request, 'Tarefa atualizada com sucesso!')
@@ -210,7 +206,6 @@ def tarefas_por_projeto(request, projeto_id):
                 nome_tarefa=nome_tarefa,
                 descricao=descricao,
                 estimativa_horas=estimativa_horas,
-                horas_gastas=horas_gastas,
                 categoria=categoria,
                 projeto=projeto,
                 usuario=request.user
@@ -231,7 +226,6 @@ def editar_tarefa(request, tarefa_id):
         tarefa.nome_tarefa = request.POST.get("nome_tarefa")
         tarefa.descricao = request.POST.get("descricao")
         tarefa.estimativa_horas = request.POST.get("estimativa_horas")
-        tarefa.horas_gastas = request.POST.get("horas_gastas") or "00:00"
         tarefa.categoria = request.POST.get("categoria")
         tarefa.save()
         messages.success(request, "Tarefa atualizada com sucesso!")
@@ -281,3 +275,52 @@ def perfil(request):
 
     context = {'password_form': password_form, 'user': user}
     return render(request, 'perfil.html', context)
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def apontamentos_tarefa(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'start':
+            if not tarefa.apontamento_ativo:
+                Apontamento.objects.create(
+                    tarefa=tarefa,
+                    usuario=request.user,
+                    hora_inicial=timezone.now()
+                )
+                messages.success(request, 'Apontamento iniciado!')
+            else:
+                messages.error(request, 'Esta tarefa já possui um apontamento em andamento.')
+
+        elif action == 'stop':
+            apontamento_id = request.POST.get('apontamento_id')
+            try:
+                apontamento_ativo = Apontamento.objects.get(
+                    id=apontamento_id, 
+                    tarefa=tarefa, 
+                    hora_final__isnull=True
+                )
+                apontamento_ativo.hora_final = timezone.now()
+                apontamento_ativo.save()
+                messages.success(request, 'Apontamento finalizado!')
+            except Apontamento.DoesNotExist:
+                messages.error(request, 'Apontamento ativo não encontrado.')
+        
+        return redirect('apontamentos_tarefa', tarefa_id=tarefa.id)
+
+    apontamentos_concluidos = Apontamento.objects.filter(
+        tarefa=tarefa, 
+        hora_final__isnull=False
+    ).order_by('-hora_inicial')
+    
+    apontamento_ativo = tarefa.apontamento_ativo
+
+    context = {
+        'tarefa': tarefa,
+        'apontamentos_concluidos': apontamentos_concluidos,
+        'apontamento_ativo': apontamento_ativo
+    }
+    return render(request, 'apontamentos.html', context)
