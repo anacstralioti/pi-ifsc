@@ -83,7 +83,11 @@ def registro(request):
 
 def login(request):
     if request.method == "GET":
+        if request.GET.get('next'):
+            messages.warning(request, "Você precisa estar logado para acessar essa página.")
+            
         return render(request, "login.html")
+    
     elif request.method == "POST":
         email = request.POST.get("email")
         senha = request.POST.get("senha")
@@ -95,11 +99,20 @@ def login(request):
             messages.add_message(
                 request, constants.SUCCESS, f"Bem-vindo, {user.first_name}!"
             )
+            
+            # ADICIONE ISSO:
+            # Pega o parâmetro 'next' que foi enviado pelo formulário
+            # (Veja o Passo 3 sobre como adicionar isso no HTML)
+            next_url = request.POST.get('next')
+            if next_url:
+                return redirect(next_url) # Redireciona para a página original
+            
+            # Se não houver 'next', vai para a página padrão
             return redirect("/produtiva/projetos/")
 
         messages.add_message(request, constants.ERROR, "E-mail ou senha inválidos.")
         return render(request, "login.html", {"data": {"login": email}})
-
+    
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def logout(request):
