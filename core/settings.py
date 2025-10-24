@@ -21,6 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOGIN_URL = 'login'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'equipeprodutivaifsc@gmail.com'
+EMAIL_HOST_PASSWORD = 'bgnb tijk dnbk tppw'
+DEFAULT_FROM_EMAIL = 'equipeprodutivaifsc@gmail.com'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
