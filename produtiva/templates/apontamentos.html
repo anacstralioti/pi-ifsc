@@ -13,7 +13,7 @@
       <p class="text-sm text-gray-700">Apontamento iniciado por:</p>
       <p class="font-medium text-lg mb-2">{{ apontamento_ativo.usuario.first_name }}</p>
       <p class="text-sm text-gray-700">Em:</p>
-      <p class="font-medium text-lg mb-4">{{ apontamento_ativo.hora_inicial|date:"d/m/Y H:i.2f" }}</p>
+      <p class="font-medium text-lg mb-4">{{ apontamento_ativo.hora_inicial|date:"d/m/Y H:i:s" }}</p>
       
       <form action="{% url 'apontamentos_tarefa' tarefa.id %}" method="POST">
         {% csrf_token %}

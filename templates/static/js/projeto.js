@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.delete-project-btn').forEach(button => {
         button.addEventListener('click', function() {
             const url = this.dataset.url;
-            if (confirm("Tem certeza que deseja apagar este projeto?")) {
+            if (confirm("Tem certeza que deseja cancelar este projeto?")) {
                 window.location.href = url;
             }
         });
@@ -39,4 +39,21 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => msg.remove(), 500); 
         }, 3000); 
     });
+
+    document.querySelectorAll('.restaurar-projeto-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const url = this.dataset.url;
+        if (confirm("Deseja restaurar este projeto?")) {
+            window.location.href = url;
+        }
+    });
+});
+    document.querySelectorAll('.excluir-definitivo-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const url = this.dataset.url;
+        if (confirm("Tem certeza que deseja excluir este projeto permanentemente? Essa ação não poderá ser desfeita.")) {
+            window.location.href = url;
+        }
+    });
+});   
 });

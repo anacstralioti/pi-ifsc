@@ -100,12 +100,10 @@ def login(request):
                 request, constants.SUCCESS, f"Bem-vindo, {user.first_name}!"
             )
             
-            # ADICIONE ISSO:
-            # Pega o parâmetro 'next' que foi enviado pelo formulário
-            # (Veja o Passo 3 sobre como adicionar isso no HTML)
+            
             next_url = request.POST.get('next')
             if next_url:
-                return redirect(next_url) # Redireciona para a página original
+                return redirect(next_url) 
             
             # Se não houver 'next', vai para a página padrão
             return redirect("/produtiva/projetos/")
@@ -126,7 +124,7 @@ def projetos(request):
     if request.method == 'POST':
         nome_recebido = request.POST.get('nome_projeto')
         descricao_recebida = request.POST.get('descricao', '')      
-
+   
         if nome_recebido and nome_recebido.strip():
             try:
                 Projeto.objects.create(
@@ -142,14 +140,41 @@ def projetos(request):
         
         return redirect('projetos')
 
-    projetos_do_usuario = Projeto.objects.filter(usuario=request.user).order_by("-data_criacao")
-    return render(request, "projetos.html", {"projetos": projetos_do_usuario})
+    projetos_do_usuario = Projeto.objects.filter(
+        usuario=request.user
+    ).order_by("-data_criacao")
+
+    projetos_ativos = projetos_do_usuario.filter(cancelado=False)
+    projetos_cancelados = projetos_do_usuario.filter(cancelado=True)
+
+    return render(request, "projetos.html", {
+        "projetos": projetos_ativos,
+        "cancelados": projetos_cancelados,
+        "todos": projetos_do_usuario
+    })
+
 
 @login_required
-def delete_projeto(request, projeto_id):
+def cancelar_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto.cancelado = True
+    projeto.save()
+    messages.info(request, f'Projeto "{projeto.nome_projeto}" foi movido para cancelados.')
+    return redirect('projetos')
+
+@login_required
+def restaurar_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto.cancelado = False
+    projeto.save()
+    messages.success(request, f'Projeto "{projeto.nome_projeto}" foi restaurado!')
+    return redirect('projetos')
+
+@login_required
+def excluir_definitivamente(request, projeto_id):
     projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
     projeto.delete()
-    messages.success(request, f'Projeto "{projeto.nome_projeto}" removido com sucesso!')
+    messages.success(request, f'Projeto "{projeto.nome_projeto}" foi excluído permanentemente.')
     return redirect('projetos')
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

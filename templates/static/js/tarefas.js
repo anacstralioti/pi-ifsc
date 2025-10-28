@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
             modalTitle.textContent = "Editar Tarefa";
             modalSubmitBtn.textContent = "Salvar Alterações";
 
-            // Preenche o formulário com os dados da tarefa
             document.getElementById('tarefa_id').value = this.dataset.id;
             document.getElementById('nome_tarefa').value = this.dataset.nome;
             document.getElementById('descricao').value = this.dataset.descricao;

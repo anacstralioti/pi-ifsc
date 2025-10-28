@@ -13,6 +13,7 @@ class Projeto(models.Model):
     )
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_ultima_atualizacao = models.DateTimeField(auto_now=True)
+    cancelado = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Projeto"
