@@ -179,53 +179,15 @@ def excluir_definitivamente(request, projeto_id):
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
-def lista_tarefas(request):
-    tarefas = Tarefa.objects.filter(usuario=request.user).order_by('nome_tarefa')
-
-    if request.method == 'POST':
-        try:
-            nome_tarefa = request.POST.get('nome_tarefa')
-            descricao = request.POST.get('descricao')
-            estimativa_horas = request.POST.get('estimativa_horas') 
-            categoria = request.POST.get('categoria')
-            projeto_padrao, created = Projeto.objects.get_or_create(
-                nome_projeto="Projeto padrão",
-                usuario=request.user
-            )
-
-            Tarefa.objects.create(
-                nome_tarefa=nome_tarefa,
-                descricao=descricao,
-                estimativa_horas=estimativa_horas, 
-                categoria=categoria,
-                projeto=projeto_padrao,
-                usuario=request.user
-            )
-            
-            messages.success(request, 'Tarefa criada com sucesso!')
-            return redirect('listatarefas')
-
-        except Exception as e:
-            messages.error(request, f"Erro ao criar a tarefa: {e}")
-            print(f"Erro: {e}")
-
-    return render(request, "listaTarefas.html", {
-        "tarefas": tarefas,
-    })
-
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@login_required
 def tarefas_por_projeto(request, projeto_id):
     projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
     
     if request.method == 'POST':
-       
         tarefa_id = request.POST.get('tarefa_id')
         nome_tarefa = request.POST.get('nome_tarefa')
         descricao = request.POST.get('descricao')
         estimativa_horas = request.POST.get('estimativa_horas')
         categoria = request.POST.get('categoria')
-
 
         if not nome_tarefa or not estimativa_horas or not categoria:
             messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
@@ -252,9 +214,24 @@ def tarefas_por_projeto(request, projeto_id):
 
         return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
-    tarefas = Tarefa.objects.filter(projeto=projeto).order_by('nome_tarefa')
-    context = { 'projeto': projeto, 'tarefas': tarefas }
+    tarefas_ativas = projeto.tarefas.filter(cancelada=False)
+    tarefas_canceladas = projeto.tarefas.filter(cancelada=True)
+    context = {
+        'projeto': projeto,
+        'tarefas': tarefas_ativas,
+        'tarefas_canceladas': tarefas_canceladas
+    }
+
     return render(request, 'tarefas_por_projeto.html', context)
+    
+def adicionar_tarefa(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+    if request.method == "POST":
+        nome = request.POST.get("nome_tarefa")
+        descricao = request.POST.get("descricao", "")
+        Tarefa.objects.create(projeto=projeto, nome_tarefa=nome, descricao=descricao)
+    return redirect('tarefas_por_projeto', projeto_id=projeto.id)
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def editar_tarefa(request, tarefa_id):
@@ -271,6 +248,30 @@ def editar_tarefa(request, tarefa_id):
 
     context = {'tarefa': tarefa, 'projeto': tarefa.projeto}
     return render(request, 'editar_tarefa.html', context)
+
+@login_required
+def cancelar_tarefa(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa.cancelada = True
+    tarefa.save()
+    messages.success(request, "Tarefa cancelada com sucesso!")
+    return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+@login_required
+def restaurar_tarefa(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa.cancelada = False
+    tarefa.save()
+    messages.success(request, "Tarefa restaurada com sucesso!")
+    return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+@login_required
+def excluir_tarefa_definitivo(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    projeto_id = tarefa.projeto.id
+    tarefa.delete()
+    messages.success(request, "Tarefa excluída permanentemente!")
+    return redirect('tarefas_por_projeto', projeto_id=projeto_id)
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

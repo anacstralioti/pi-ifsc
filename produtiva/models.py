@@ -48,6 +48,7 @@ class Tarefa(models.Model):
         blank=True,
         related_name="tarefas_atribuidas",
     )
+    cancelada = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.nome_tarefa}"
