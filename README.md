@@ -35,24 +35,3 @@
 
 ---   
 
-## 3. Organização das Entregas por Sprint    
-    
-### Sprint 1
-
-- Cadastrar usuário
-- Login usuário
-- Gerenciar projetos
-  
-### Sprint 2    
-
-- Gerenciar Tarefas
-
----
-
-## 4. Como utilizar o sistema?
-
-- python -m venv venv
-- ./venv/Scripts/activate
-- python manage.py runserver
-
----
