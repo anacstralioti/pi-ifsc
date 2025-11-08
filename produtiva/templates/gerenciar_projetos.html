@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% load static %} {% block title %}Gerenciamento de
 Projetos - Produtiva{% endblock %} {% block header_right_content %}
 <div class="flex items-center space-x-2">
- {% if user.is_authenticated %}
+  {% if user.is_authenticated %}
   <a
     href="{% url 'perfil' %}"
     class="group flex items-center text-gray-800 font-medium hidden md:flex hover:text-indigo-600 transition-colors duration-200"
@@ -22,31 +22,24 @@ Projetos - Produtiva{% endblock %} {% block header_right_content %}
     </svg>
     <span>{{ user.first_name }}</span>
   </a>
-
-  {% if user.perfil.is_admin %}
-    <a
-      href="{% url 'gerenciar_projetos' %}"
-      class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 transition"
-    >
-       Projetos
-    </a>
-  {% endif %}
-
   <a
     href="{% url 'logout' %}"
     class="text-red-600 hover:text-red-800 font-medium hidden md:inline-block transition-colors duration-200"
+    >Sair</a
   >
-    Sair
+  <a
+    href="{% url 'gerenciar_projetos' %}"
+    class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 transition"
+  >
+   Projetos
   </a>
-{% else %}
+  {% else %}
   <a
     href="{% url 'login' %}"
     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+    >Faça Login</a
   >
-    Faça Login
-  </a>
-{% endif %}
-
+  {% endif %}
 </div>
 {% endblock header_right_content %} {% block 'body' %}
 <div class="flex min-h-screen bg-gray-100 p-6">

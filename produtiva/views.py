@@ -363,3 +363,20 @@ def apontamentos_tarefa(request, tarefa_id):
         'apontamento_ativo': apontamento_ativo
     }
     return render(request, 'apontamentos.html', context)
+
+@login_required
+def gerenciar_projetos(request):
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.is_admin:
+        messages.error(request, "Você não tem permissão para acessar esta página.")
+        return redirect('projetos')
+
+    projetos_ativos = Projeto.objects.filter(cancelado=False).order_by('-data_criacao')
+    projetos_cancelados = Projeto.objects.filter(cancelado=True).order_by('-data_criacao')
+
+    context = {
+        'projetos_ativos': projetos_ativos,
+        'projetos_cancelados': projetos_cancelados,
+    }
+
+    return render(request, 'gerenciar_projetos.html', context)
+
