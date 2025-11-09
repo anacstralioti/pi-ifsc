@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'produtiva.context_processors.perfil_context',
             ],
         },
     },
@@ -123,6 +124,8 @@ TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 
 USE_TZ = True
+
+CSRF_FAILURE_VIEW = 'produtiva.views.csrf_error_view'
 
 
 # Static files (CSS, JavaScript, Images)

@@ -128,8 +128,9 @@ def projetos(request):
     else:
         projetos_do_usuario = Projeto.objects.filter(participantes=user)
 
-    projetos_ativos = projetos_do_usuario.filter(cancelado=False)
+    projetos_ativos = projetos_do_usuario.filter(cancelado=False, concluido=False)
     projetos_cancelados = projetos_do_usuario.filter(cancelado=True)
+    projetos_concluidos = projetos_do_usuario.filter(concluido=True)
 
     if request.method == "POST" and user.perfil.is_admin:
         nome = request.POST.get("nome_projeto")
@@ -150,10 +151,12 @@ def projetos(request):
     context = {
         "projetos": projetos_ativos,
         "cancelados": projetos_cancelados,
+        "concluidos": projetos_concluidos,
         "users": User.objects.all(),
     }
 
     return render(request, "projetos.html", context)
+
 @login_required
 def cancelar_projeto(request, projeto_id):
     projeto = get_object_or_404(Projeto, id=projeto_id)
@@ -164,6 +167,34 @@ def cancelar_projeto(request, projeto_id):
     projeto.cancelado = True
     projeto.save()
     messages.info(request, f'Projeto "{projeto.nome_projeto}" foi movido para cancelados.')
+    return redirect('projetos')
+
+@login_required
+def concluir_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+    
+    if not request.user.perfil.is_admin:
+        messages.error(request, "Apenas administradores podem concluir projetos.")
+        return redirect('projetos')
+
+    projeto.concluido = True
+    projeto.cancelado = False  # garante que não fique duplicado
+    projeto.save()
+
+    messages.success(request, f'Projeto "{projeto.nome_projeto}" foi concluído com sucesso!')
+    return redirect('projetos')
+
+
+@login_required
+def restaurar_projeto_concluido(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+    if not request.user.perfil.is_admin:
+        messages.error(request, "Apenas administradores podem reabrir projetos concluídos.")
+        return redirect('projetos')
+
+    projeto.concluido = False
+    projeto.save()
+    messages.success(request, f'Projeto "{projeto.nome_projeto}" foi reaberto com sucesso!')
     return redirect('projetos')
 
 @login_required
@@ -181,17 +212,47 @@ def excluir_definitivamente(request, projeto_id):
     messages.success(request, f'Projeto "{projeto.nome_projeto}" foi excluído permanentemente.')
     return redirect('projetos')
 
+@login_required
+def editar_projeto(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+
+    if not request.user.perfil.is_admin:
+        messages.error(request, "Apenas administradores podem editar projetos.")
+        return redirect('projetos')
+
+    if request.method == "POST":
+        nome = request.POST.get("nome_projeto")
+        descricao = request.POST.get("descricao")
+        participantes_ids = request.POST.getlist("participantes")
+
+        projeto.nome_projeto = nome
+        projeto.descricao = descricao
+        projeto.save()
+
+        if participantes_ids:
+            projeto.participantes.set(participantes_ids)
+        else:
+            projeto.participantes.clear()
+
+        messages.success(request, f'O projeto "{projeto.nome_projeto}" foi atualizado com sucesso!')
+        return redirect('projetos')
+
+    context = {
+        "projeto": projeto,
+        "users": User.objects.all(),
+    }
+    return render(request, "editar_projeto.html", context)
+
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def tarefas_por_projeto(request, projeto_id):
     user = request.user
+    projeto = get_object_or_404(Projeto, id=projeto_id)
 
-    if hasattr(user, 'perfil') and user.perfil.is_admin:
-        projeto = get_object_or_404(Projeto, id=projeto_id)
-    else:
-        projeto = get_object_or_404(
-            Projeto.objects.filter(participantes=user), id=projeto_id
-        )
+    if not (hasattr(user, 'perfil') and user.perfil.is_admin) and user not in projeto.participantes.all():
+        messages.error(request, "Você não tem permissão para acessar este projeto.")
+        return redirect('projetos')
 
     if request.method == 'POST':
         tarefa_id = request.POST.get('tarefa_id')
@@ -205,10 +266,10 @@ def tarefas_por_projeto(request, projeto_id):
             return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
         if tarefa_id:
-            if hasattr(user, 'perfil') and user.perfil.is_admin:
-                tarefa = get_object_or_404(Tarefa, id=tarefa_id)
-            else:
-                tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=user)
+            tarefa = get_object_or_404(Tarefa, id=tarefa_id, projeto=projeto)
+            if not (user == tarefa.usuario or user.perfil.is_admin or user in projeto.participantes.all()):
+                messages.error(request, "Você não tem permissão para editar esta tarefa.")
+                return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
             tarefa.nome_tarefa = nome_tarefa
             tarefa.descricao = descricao
@@ -216,7 +277,6 @@ def tarefas_por_projeto(request, projeto_id):
             tarefa.categoria = categoria
             tarefa.save()
             messages.success(request, 'Tarefa atualizada com sucesso!')
-
         else:
             Tarefa.objects.create(
                 nome_tarefa=nome_tarefa,
@@ -230,25 +290,24 @@ def tarefas_por_projeto(request, projeto_id):
 
         return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
-    tarefas_ativas = projeto.tarefas.filter(cancelada=False)
-    tarefas_canceladas = projeto.tarefas.filter(cancelada=True)
-
     context = {
         'projeto': projeto,
-        'tarefas': tarefas_ativas,
-        'tarefas_canceladas': tarefas_canceladas
+        'tarefas': projeto.tarefas.filter(cancelada=False, concluida=False),
+        'tarefas_concluidas': projeto.tarefas.filter(concluida=True),
+        'tarefas_canceladas': projeto.tarefas.filter(cancelada=True),
     }
-
     return render(request, 'tarefas_por_projeto.html', context)
 
 
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def editar_tarefa(request, tarefa_id):
-    if hasattr(request.user, 'perfil') and request.user.perfil.is_admin:
-        tarefa = get_object_or_404(Tarefa, id=tarefa_id)
-    else:
-        tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    user = request.user
+
+    if not (user.perfil.is_admin or user in tarefa.projeto.participantes.all()):
+        messages.error(request, "Você não tem permissão para editar esta tarefa.")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
     if request.method == "POST":
         tarefa.nome_tarefa = request.POST.get("nome_tarefa")
         tarefa.descricao = request.POST.get("descricao")
@@ -261,48 +320,91 @@ def editar_tarefa(request, tarefa_id):
     context = {'tarefa': tarefa, 'projeto': tarefa.projeto}
     return render(request, 'editar_tarefa.html', context)
 
+
+@login_required
+def concluir_tarefa(request, tarefa_id):
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    user = request.user
+
+    if not (user.perfil.is_admin or user in tarefa.projeto.participantes.all()):
+        messages.error(request, "Você não tem permissão para concluir esta tarefa.")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+    tarefa.concluida = True
+    tarefa.cancelada = False
+    tarefa.save()
+    messages.success(request, f"Tarefa '{tarefa.nome_tarefa}' concluída com sucesso.")
+    return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+
 @login_required
 def cancelar_tarefa(request, tarefa_id):
-    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    user = request.user
+
+    if not (user.perfil.is_admin or user in tarefa.projeto.participantes.all()):
+        messages.error(request, "Você não tem permissão para cancelar esta tarefa.")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
     tarefa.cancelada = True
+    tarefa.concluida = False
     tarefa.save()
-    messages.success(request, "Tarefa cancelada com sucesso!")
+    messages.info(request, f"Tarefa '{tarefa.nome_tarefa}' foi cancelada.")
     return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
 
 @login_required
 def restaurar_tarefa(request, tarefa_id):
-    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    user = request.user
+
+    if not (user.perfil.is_admin or user in tarefa.projeto.participantes.all()):
+        messages.error(request, "Você não tem permissão para restaurar esta tarefa.")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
     tarefa.cancelada = False
+    tarefa.concluida = False
     tarefa.save()
-    messages.success(request, "Tarefa restaurada com sucesso!")
+    messages.success(request, f"Tarefa '{tarefa.nome_tarefa}' foi restaurada com sucesso.")
     return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
 
 @login_required
 def excluir_tarefa_definitivo(request, tarefa_id):
-    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
-    projeto_id = tarefa.projeto.id
-    tarefa.delete()
-    messages.success(request, "Tarefa excluída permanentemente!")
-    return redirect('tarefas_por_projeto', projeto_id=projeto_id)
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    user = request.user
 
+    if not user.perfil.is_admin:
+        messages.error(request, "Apenas administradores podem excluir tarefas permanentemente.")
+        return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
+
+    tarefa.delete()
+    messages.success(request, f"Tarefa '{tarefa.nome_tarefa}' excluída permanentemente.")
+    return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def perfil(request):
     user = request.user
+    perfil = user.perfil  # relação 1-1
 
     if request.method == 'POST':
         email = request.POST.get('email')
         if User.objects.filter(email=email).exclude(pk=user.pk).exists():
             messages.error(request, 'Este e-mail já está em uso por outro utilizador.')
             password_form = PasswordChangeForm(user, request.POST)
-            context = {'password_form': password_form, 'user': user}
+            context = {'password_form': password_form, 'user': user, 'perfil': perfil}
             return render(request, 'perfil.html', context)
-        
+
         user.first_name = request.POST.get('first_name')
         user.last_name = request.POST.get('last_name')
         user.email = email
         user.save()
+
+        # Foto de perfil
+        if 'foto' in request.FILES:
+            perfil.foto = request.FILES['foto']
+            perfil.save()
 
         password_form = PasswordChangeForm(user, request.POST)
         old_password = request.POST.get('old_password')
@@ -315,16 +417,15 @@ def perfil(request):
                 return redirect('perfil')
             else:
                 messages.error(request, 'Não foi possível alterar a sua senha. Verifique os erros abaixo.')
-                context = {'password_form': password_form, 'user': user}
-                return render(request, 'perfil.html', context)
         else:
             messages.success(request, 'As suas informações de perfil foram salvas!')
-            return redirect('perfil')
+
+        return redirect('perfil')
 
     else:
         password_form = PasswordChangeForm(user)
 
-    context = {'password_form': password_form, 'user': user}
+    context = {'password_form': password_form, 'user': user, 'perfil': perfil}
     return render(request, 'perfil.html', context)
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -348,6 +449,8 @@ def apontamentos_tarefa(request, tarefa_id):
 
         elif action == 'stop':
             apontamento_id = request.POST.get('apontamento_id')
+            descricao = request.POST.get('descricao')  # 👈 pega o texto digitado
+
             try:
                 apontamento_ativo = Apontamento.objects.get(
                     id=apontamento_id, 
@@ -355,8 +458,9 @@ def apontamentos_tarefa(request, tarefa_id):
                     hora_final__isnull=True
                 )
                 apontamento_ativo.hora_final = timezone.now()
+                apontamento_ativo.descricao = descricao  # 👈 salva o texto no banco
                 apontamento_ativo.save()
-                messages.success(request, 'Apontamento finalizado!')
+                messages.success(request, 'Apontamento finalizado com sucesso!')
             except Apontamento.DoesNotExist:
                 messages.error(request, 'Apontamento ativo não encontrado.')
         
@@ -376,4 +480,82 @@ def apontamentos_tarefa(request, tarefa_id):
     }
     return render(request, 'apontamentos.html', context)
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def relatorio_produtividade(request, projeto_id):
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+    tarefas = Tarefa.objects.filter(projeto=projeto)
 
+    dados_tarefas = []
+    total_estimado = 0.0
+    total_gasto = 0.0
+
+    for t in tarefas:
+        if t.cancelada:
+            dados_tarefas.append({
+                "nome": t.nome_tarefa,
+                "status": "Cancelada",
+                "estimado": "-",
+                "gasto": "-",
+                "diferenca": "-",
+            })
+            continue
+
+        if not t.concluida:
+            continue
+
+        estimado_horas = (
+            t.estimativa_horas.hour + t.estimativa_horas.minute / 60
+            if t.estimativa_horas else 0
+        )
+
+        gasto_horas = 0
+        if t.total_horas_gastas_str:
+            try:
+                h, m = map(int, t.total_horas_gastas_str.split(":"))
+                gasto_horas = h + m / 60
+            except ValueError:
+                gasto_horas = 0
+
+        if gasto_horas == 0:
+            dados_tarefas.append({
+                "nome": t.nome_tarefa,
+                "status": "Não executada",
+                "estimado": round(estimado_horas, 2),
+                "gasto": 0,
+                "diferenca": "-",
+            })
+            continue
+
+        total_estimado += estimado_horas
+        total_gasto += gasto_horas
+
+        dados_tarefas.append({
+            "nome": t.nome_tarefa,
+            "status": "Concluída",
+            "estimado": round(estimado_horas, 2),
+            "gasto": round(gasto_horas, 2),
+            "diferenca": round(gasto_horas - estimado_horas, 2),
+        })
+
+    diferenca_total = round(total_gasto - total_estimado, 2)
+    produtividade_percentual = 0
+    if total_estimado > 0:
+        produtividade_percentual = round(
+            (min(total_estimado, total_gasto) / total_estimado) * 100, 1
+        )
+
+    contexto = {
+        "projeto": projeto,
+        "tarefas": dados_tarefas,
+        "total_estimado": round(total_estimado, 2),
+        "total_gasto": round(total_gasto, 2),
+        "diferenca_total": diferenca_total,
+        "produtividade_percentual": produtividade_percentual,
+    }
+
+    return render(request, "relatorio_produtividade.html", contexto)
+
+def csrf_error_view(request, reason=""):
+    """Exibe página amigável de erro CSRF"""
+    return render(request, '403.html', status=403)

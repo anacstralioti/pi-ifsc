@@ -6,8 +6,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class Perfil(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
     is_admin = models.BooleanField(default=False)
+    foto = models.ImageField(upload_to='fotos_perfil/', blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -32,6 +33,7 @@ class Projeto(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_ultima_atualizacao = models.DateTimeField(auto_now=True)
     cancelado = models.BooleanField(default=False)
+    concluido = models.BooleanField(default=False, verbose_name="Concluído")
 
     class Meta:
         verbose_name = "Projeto"
@@ -67,7 +69,7 @@ class Tarefa(models.Model):
         related_name="tarefas_atribuidas",
     )
     cancelada = models.BooleanField(default=False)
-
+    concluida = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.nome_tarefa}"
 
