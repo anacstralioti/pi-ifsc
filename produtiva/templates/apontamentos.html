@@ -3,6 +3,47 @@
 
 {% block title %}Apontamentos de {{ tarefa.nome_tarefa }}{% endblock %}
 
+{% block header_right_content %}
+  {% if user.is_authenticated %}
+    <div class="flex items-center space-x-4">
+      <a
+        href="{% url 'perfil' %}"
+        class="group flex items-center text-gray-800 font-medium hidden md:flex hover:text-indigo-600 transition-colors duration-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-1.5 text-gray-500 group-hover:text-indigo-600 transition-colors duration-200"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+        <span>{{ user.first_name }}</span>
+      </a>
+
+      <a
+        href="{% url 'logout' %}"
+        class="text-red-600 hover:text-red-800 font-medium hidden md:inline-block transition-colors duration-200"
+      >
+        Sair
+      </a>
+    </div>
+  {% else %}
+    <a
+      href="{% url 'login' %}"
+      class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+    >
+      Faça Login
+    </a>
+  {% endif %}
+{% endblock header_right_content %}
+
 {% block 'body' %}
 <div class="flex min-h-screen bg-gray-100 p-6">
   
@@ -37,7 +78,7 @@
     {% endif %}
 
     <a href="{% url 'tarefas_por_projeto' tarefa.projeto.id %}" class="mt-6 block text-center text-sm text-indigo-600 hover:text-indigo-800 hover:underline">
-      &larr; Voltar para o projeto
+      &larr; Voltar para tarefas
     </a>
   </div>
 

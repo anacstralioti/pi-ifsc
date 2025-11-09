@@ -26,6 +26,9 @@ class Projeto(models.Model):
     usuario = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="projetos_criados"
     )
+    participantes = models.ManyToManyField(
+        User, related_name="projetos_participando", blank=True, verbose_name="Participantes"
+    )
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_ultima_atualizacao = models.DateTimeField(auto_now=True)
     cancelado = models.BooleanField(default=False)

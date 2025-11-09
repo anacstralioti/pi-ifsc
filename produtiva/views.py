@@ -105,7 +105,6 @@ def login(request):
             if next_url:
                 return redirect(next_url) 
             
-            # Se não houver 'next', vai para a página padrão
             return redirect("/produtiva/projetos/")
 
         messages.add_message(request, constants.ERROR, "E-mail ou senha inválidos.")
@@ -120,43 +119,48 @@ def logout(request):
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
+@login_required
 def projetos(request):
-    if request.method == 'POST':
-        nome_recebido = request.POST.get('nome_projeto')
-        descricao_recebida = request.POST.get('descricao', '')      
-   
-        if nome_recebido and nome_recebido.strip():
-            try:
-                Projeto.objects.create(
-                    nome_projeto=nome_recebido,
-                    descricao=descricao_recebida,
-                    usuario=request.user
-                )
-                messages.success(request, 'Projeto criado com sucesso!')
-            except Exception as e:
-                messages.error(request, f'Ocorreu um erro no servidor: {e}')
-        else:
-            messages.error(request, 'O nome do projeto não pode estar em branco.')
-        
-        return redirect('projetos')
+    user = request.user
 
-    projetos_do_usuario = Projeto.objects.filter(
-        usuario=request.user
-    ).order_by("-data_criacao")
+    if hasattr(user, 'perfil') and user.perfil.is_admin:
+        projetos_do_usuario = Projeto.objects.all()
+    else:
+        projetos_do_usuario = Projeto.objects.filter(participantes=user)
 
     projetos_ativos = projetos_do_usuario.filter(cancelado=False)
     projetos_cancelados = projetos_do_usuario.filter(cancelado=True)
 
-    return render(request, "projetos.html", {
+    if request.method == "POST" and user.perfil.is_admin:
+        nome = request.POST.get("nome_projeto")
+        descricao = request.POST.get("descricao")
+        participantes_ids = request.POST.getlist("participantes")
+
+        projeto = Projeto.objects.create(
+            nome_projeto=nome,
+            descricao=descricao,
+            usuario=user
+        )
+        if participantes_ids:
+            projeto.participantes.set(participantes_ids)
+
+        messages.success(request, "Projeto criado com sucesso!")
+        return redirect("projetos")
+
+    context = {
         "projetos": projetos_ativos,
         "cancelados": projetos_cancelados,
-        "todos": projetos_do_usuario
-    })
+        "users": User.objects.all(),
+    }
 
-
+    return render(request, "projetos.html", context)
 @login_required
 def cancelar_projeto(request, projeto_id):
-    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto = get_object_or_404(Projeto, id=projeto_id)
+    if not request.user.perfil.is_admin:
+        messages.error(request, "Apenas administradores podem cancelar projetos.")
+        return redirect('projetos')
+        
     projeto.cancelado = True
     projeto.save()
     messages.info(request, f'Projeto "{projeto.nome_projeto}" foi movido para cancelados.')
@@ -164,7 +168,7 @@ def cancelar_projeto(request, projeto_id):
 
 @login_required
 def restaurar_projeto(request, projeto_id):
-    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto = get_object_or_404(Projeto, id=projeto_id)
     projeto.cancelado = False
     projeto.save()
     messages.success(request, f'Projeto "{projeto.nome_projeto}" foi restaurado!')
@@ -172,7 +176,7 @@ def restaurar_projeto(request, projeto_id):
 
 @login_required
 def excluir_definitivamente(request, projeto_id):
-    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
+    projeto = get_object_or_404(Projeto, id=projeto_id)
     projeto.delete()
     messages.success(request, f'Projeto "{projeto.nome_projeto}" foi excluído permanentemente.')
     return redirect('projetos')
@@ -180,8 +184,15 @@ def excluir_definitivamente(request, projeto_id):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def tarefas_por_projeto(request, projeto_id):
-    projeto = get_object_or_404(Projeto, id=projeto_id, usuario=request.user)
-    
+    user = request.user
+
+    if hasattr(user, 'perfil') and user.perfil.is_admin:
+        projeto = get_object_or_404(Projeto, id=projeto_id)
+    else:
+        projeto = get_object_or_404(
+            Projeto.objects.filter(participantes=user), id=projeto_id
+        )
+
     if request.method == 'POST':
         tarefa_id = request.POST.get('tarefa_id')
         nome_tarefa = request.POST.get('nome_tarefa')
@@ -193,22 +204,27 @@ def tarefas_por_projeto(request, projeto_id):
             messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
             return redirect('tarefas_por_projeto', projeto_id=projeto.id)
 
-        if tarefa_id: 
-            tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+        if tarefa_id:
+            if hasattr(user, 'perfil') and user.perfil.is_admin:
+                tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+            else:
+                tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=user)
+
             tarefa.nome_tarefa = nome_tarefa
             tarefa.descricao = descricao
             tarefa.estimativa_horas = estimativa_horas
             tarefa.categoria = categoria
             tarefa.save()
             messages.success(request, 'Tarefa atualizada com sucesso!')
-        else:  
+
+        else:
             Tarefa.objects.create(
                 nome_tarefa=nome_tarefa,
                 descricao=descricao,
                 estimativa_horas=estimativa_horas,
                 categoria=categoria,
                 projeto=projeto,
-                usuario=request.user
+                usuario=user
             )
             messages.success(request, 'Tarefa adicionada ao projeto com sucesso!')
 
@@ -216,6 +232,7 @@ def tarefas_por_projeto(request, projeto_id):
 
     tarefas_ativas = projeto.tarefas.filter(cancelada=False)
     tarefas_canceladas = projeto.tarefas.filter(cancelada=True)
+
     context = {
         'projeto': projeto,
         'tarefas': tarefas_ativas,
@@ -223,20 +240,15 @@ def tarefas_por_projeto(request, projeto_id):
     }
 
     return render(request, 'tarefas_por_projeto.html', context)
-    
-def adicionar_tarefa(request, projeto_id):
-    projeto = get_object_or_404(Projeto, id=projeto_id)
-    if request.method == "POST":
-        nome = request.POST.get("nome_tarefa")
-        descricao = request.POST.get("descricao", "")
-        Tarefa.objects.create(projeto=projeto, nome_tarefa=nome, descricao=descricao)
-    return redirect('tarefas_por_projeto', projeto_id=projeto.id)
+
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def editar_tarefa(request, tarefa_id):
-    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
-
+    if hasattr(request.user, 'perfil') and request.user.perfil.is_admin:
+        tarefa = get_object_or_404(Tarefa, id=tarefa_id)
+    else:
+        tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
     if request.method == "POST":
         tarefa.nome_tarefa = request.POST.get("nome_tarefa")
         tarefa.descricao = request.POST.get("descricao")
@@ -318,7 +330,7 @@ def perfil(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def apontamentos_tarefa(request, tarefa_id):
-    tarefa = get_object_or_404(Tarefa, id=tarefa_id, usuario=request.user)
+    tarefa = get_object_or_404(Tarefa, id=tarefa_id)
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -364,19 +376,4 @@ def apontamentos_tarefa(request, tarefa_id):
     }
     return render(request, 'apontamentos.html', context)
 
-@login_required
-def gerenciar_projetos(request):
-    if not hasattr(request.user, 'perfil') or not request.user.perfil.is_admin:
-        messages.error(request, "Você não tem permissão para acessar esta página.")
-        return redirect('projetos')
-
-    projetos_ativos = Projeto.objects.filter(cancelado=False).order_by('-data_criacao')
-    projetos_cancelados = Projeto.objects.filter(cancelado=True).order_by('-data_criacao')
-
-    context = {
-        'projetos_ativos': projetos_ativos,
-        'projetos_cancelados': projetos_cancelados,
-    }
-
-    return render(request, 'gerenciar_projetos.html', context)
 

@@ -20,13 +20,10 @@ urlpatterns = [
 
     path("projetos/<int:projeto_id>/tarefas/", views.tarefas_por_projeto, name="tarefas_por_projeto"),
     path('tarefa/editar/<int:tarefa_id>/', views.editar_tarefa, name='editar_tarefa'),
-    path('projetos/<int:projeto_id>/tarefas/adicionar/', views.adicionar_tarefa, name='adicionar_tarefa'),
+   # path('projetos/<int:projeto_id>/tarefas/adicionar/', views.adicionar_tarefa, name='adicionar_tarefa'),
     path('tarefa/<int:tarefa_id>/apontamentos/', views.apontamentos_tarefa, name='apontamentos_tarefa'),   
     path('tarefa/<int:tarefa_id>/cancelar/', views.cancelar_tarefa, name='cancelar_tarefa'),
     path('tarefa/<int:tarefa_id>/restaurar/', views.restaurar_tarefa, name='restaurar_tarefa'),
     path('tarefa/<int:tarefa_id>/excluir_definitivo/', views.excluir_tarefa_definitivo, name='excluir_tarefa_definitivo'),
-
-    path('gerenciar/', views.gerenciar_projetos, name='gerenciar_projetos'),
-
 
 ]
