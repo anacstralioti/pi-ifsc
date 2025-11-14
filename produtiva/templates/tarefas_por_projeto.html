@@ -91,6 +91,58 @@
       <span class="text-indigo-600">{{ projeto.nome_projeto }}</span>
     </h1>
     <p class="text-gray-600 mb-6">{{ projeto.descricao|default_if_none:"" }}</p>
+<div class="flex items-center gap-4 mt-4 mb-6">
+  <div class="relative group">
+
+    {% if projeto.usuario.perfil.foto %}
+      <img src="{{ projeto.usuario.perfil.foto.url }}" 
+           class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500 shadow">
+    {% else %}
+      <div class="w-10 h-10 rounded-full bg-yellow-300 flex items-center justify-center text-gray-700 text-sm">
+        {{ projeto.usuario.first_name|slice:":1" }}{{ projeto.usuario.last_name|slice:":1" }}
+      </div>
+    {% endif %}
+
+    <div class="absolute left-1/2 -translate-x-1/2 mt-2 hidden group-hover:block
+                bg-yellow-600 text-white text-xs rounded px-3 py-2 z-50 whitespace-nowrap shadow-lg">
+
+      <p class="font-semibold">
+        {{ projeto.usuario.first_name }} {{ projeto.usuario.last_name }}
+        <span class="text-yellow-300 font-bold">(Administrador)</span>
+      </p>
+
+      <p class="text-gray-200">{{ projeto.usuario.email }}</p>
+    </div>
+
+  </div>
+
+  {% for participante in projeto.participantes.all %}
+    {% if participante != projeto.usuario %}
+      <div class="relative group">
+
+        {% if participante.perfil.foto %}
+          <img src="{{ participante.perfil.foto.url }}" 
+               class="w-10 h-10 rounded-full object-cover border-2 border-indigo-500 shadow">
+        {% else %}
+          <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm">
+            {{ participante.first_name|slice:":1" }}{{ participante.last_name|slice:":1" }}
+          </div>
+        {% endif %}
+
+        <div class="absolute left-1/2 -translate-x-1/2 mt-2 hidden group-hover:block
+                    bg-gray-900 text-white text-xs rounded px-3 py-2 z-50 whitespace-nowrap shadow-lg">
+
+          <p class="font-semibold">
+            {{ participante.first_name }} {{ participante.last_name }}
+          </p>
+
+          <p class="text-gray-300">{{ participante.email }}</p>
+        </div>
+
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
 
     {% if messages %}
     <div class="mb-4 space-y-2 w-full">

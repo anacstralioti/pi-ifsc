@@ -178,7 +178,7 @@ def concluir_projeto(request, projeto_id):
         return redirect('projetos')
 
     projeto.concluido = True
-    projeto.cancelado = False  # garante que não fique duplicado
+    projeto.cancelado = False 
     projeto.save()
 
     messages.success(request, f'Projeto "{projeto.nome_projeto}" foi concluído com sucesso!')
@@ -449,7 +449,7 @@ def apontamentos_tarefa(request, tarefa_id):
 
         elif action == 'stop':
             apontamento_id = request.POST.get('apontamento_id')
-            descricao = request.POST.get('descricao')  # 👈 pega o texto digitado
+            descricao = request.POST.get('descricao')  
 
             try:
                 apontamento_ativo = Apontamento.objects.get(
@@ -458,7 +458,7 @@ def apontamentos_tarefa(request, tarefa_id):
                     hora_final__isnull=True
                 )
                 apontamento_ativo.hora_final = timezone.now()
-                apontamento_ativo.descricao = descricao  # 👈 salva o texto no banco
+                apontamento_ativo.descricao = descricao  
                 apontamento_ativo.save()
                 messages.success(request, 'Apontamento finalizado com sucesso!')
             except Apontamento.DoesNotExist:
