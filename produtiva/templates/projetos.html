@@ -206,7 +206,7 @@ Gerenciamento de Projetos - Produtiva
           {% for projeto in concluidos %}
             <li class="flex items-center justify-between bg-gray-50 p-4 rounded-md border border-gray-200">
               <div>
-                <span class="text-gray-500 line-through">{{ projeto.nome_projeto }}</span>
+                <span class="text-gray-500">{{ projeto.nome_projeto }}</span>
                 <p class="text-sm text-gray-400">{{ projeto.descricao|default_if_none:"Sem descrição" }}</p>
               </div>
               <div class="flex items-center space-x-3">
