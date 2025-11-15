@@ -326,7 +326,7 @@ def concluir_tarefa(request, tarefa_id):
     tarefa = get_object_or_404(Tarefa, id=tarefa_id)
     user = request.user
 
-    if not (user.perfil.is_admin or user in tarefa.projeto.participantes.all()):
+    if not (user == tarefa.usuario or user.perfil.is_admin):
         messages.error(request, "Você não tem permissão para concluir esta tarefa.")
         return redirect('tarefas_por_projeto', projeto_id=tarefa.projeto.id)
 
@@ -497,11 +497,7 @@ def relatorio_produtividade(request, projeto_id):
                 "status": "Cancelada",
                 "estimado": "-",
                 "gasto": "-",
-                "diferenca": "-",
             })
-            continue
-
-        if not t.concluida:
             continue
 
         estimado_horas = (
@@ -517,28 +513,22 @@ def relatorio_produtividade(request, projeto_id):
             except ValueError:
                 gasto_horas = 0
 
-        if gasto_horas == 0:
-            dados_tarefas.append({
-                "nome": t.nome_tarefa,
-                "status": "Não executada",
-                "estimado": round(estimado_horas, 2),
-                "gasto": 0,
-                "diferenca": "-",
-            })
-            continue
-
+        # Soma horas de TODAS as tarefas, mesmo não executadas
         total_estimado += estimado_horas
         total_gasto += gasto_horas
 
+        if gasto_horas == 0:
+            status = "Não executada"
+        else:
+            status = "Concluída"
+
         dados_tarefas.append({
             "nome": t.nome_tarefa,
-            "status": "Concluída",
+            "status": status,
             "estimado": round(estimado_horas, 2),
             "gasto": round(gasto_horas, 2),
-            "diferenca": round(gasto_horas - estimado_horas, 2),
         })
 
-    diferenca_total = round(total_gasto - total_estimado, 2)
     produtividade_percentual = 0
     if total_estimado > 0:
         produtividade_percentual = round(
@@ -550,7 +540,6 @@ def relatorio_produtividade(request, projeto_id):
         "tarefas": dados_tarefas,
         "total_estimado": round(total_estimado, 2),
         "total_gasto": round(total_gasto, 2),
-        "diferenca_total": diferenca_total,
         "produtividade_percentual": produtividade_percentual,
     }
 

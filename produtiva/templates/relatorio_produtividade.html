@@ -91,7 +91,6 @@
           <th class="border border-gray-300 px-4 py-2 text-center">Status</th>
           <th class="border border-gray-300 px-4 py-2 text-center">Tempo Estimado (h)</th>
           <th class="border border-gray-300 px-4 py-2 text-center">Tempo Gasto (h)</th>
-          <th class="border border-gray-300 px-4 py-2 text-center">Diferença</th>
         </tr>
       </thead>
       <tbody>
@@ -109,17 +108,6 @@
             </td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.estimado }}</td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.gasto }}</td>
-            <td class="border border-gray-300 px-4 py-2 text-center">
-              {% if tarefa.diferenca == "-" %}
-                <span class="text-gray-400">-</span>
-              {% elif tarefa.diferenca > 0 %}
-                <span class="text-red-600 font-semibold">+{{ tarefa.diferenca }}</span>
-              {% elif tarefa.diferenca < 0 %}
-                <span class="text-green-600 font-semibold">{{ tarefa.diferenca }}</span>
-              {% else %}
-                <span class="text-gray-500">0</span>
-              {% endif %}
-            </td>
           </tr>
         {% empty %}
           <tr>
@@ -129,11 +117,10 @@
       </tbody>
       <tfoot class="bg-gray-100 font-semibold">
         <tr>
-          <td class="border border-gray-300 px-4 py-2 text-right">Totais (somente concluídas executadas):</td>
+          <td class="border border-gray-300 px-4 py-2 text-left">Total:</td>
           <td class="border border-gray-300 px-4 py-2 text-center">—</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ total_estimado }}</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ total_gasto }}</td>
-          <td class="border border-gray-300 px-4 py-2 text-center">{{ diferenca_total }}</td>
         </tr>
       </tfoot>
     </table>
