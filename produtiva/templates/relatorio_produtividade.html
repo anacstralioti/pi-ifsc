@@ -45,24 +45,6 @@
   {% endif %}
 </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("perfilMenuBtn");
-    const menu = document.getElementById("perfilDropdown");
-
-    if (btn) {
-      btn.addEventListener("click", () => {
-        menu.classList.toggle("hidden");
-      });
-
--      document.addEventListener("click", (e) => {
-        if (!btn.contains(e.target) && !menu.contains(e.target)) {
-          menu.classList.add("hidden");
-        }
-      });
-    }
-  });
-</script>
 {% endblock header_right_content %}
 
 {% block 'body' %}
@@ -89,8 +71,8 @@
         <tr>
           <th class="border border-gray-300 px-4 py-2 text-left">Tarefa</th>
           <th class="border border-gray-300 px-4 py-2 text-center">Status</th>
-          <th class="border border-gray-300 px-4 py-2 text-center">Tempo Estimado (h)</th>
-          <th class="border border-gray-300 px-4 py-2 text-center">Tempo Gasto (h)</th>
+          <th class="border border-gray-300 px-4 py-2 text-center">Tempo Estimado</th>
+          <th class="border border-gray-300 px-4 py-2 text-center">Tempo Gasto</th>
         </tr>
       </thead>
       <tbody>
@@ -108,6 +90,7 @@
             </td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.estimado }}</td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.gasto }}</td>
+            <td class="border border-gray-300 px-4 py-2 text-center"></td>
           </tr>
         {% empty %}
           <tr>
@@ -117,7 +100,7 @@
       </tbody>
       <tfoot class="bg-gray-100 font-semibold">
         <tr>
-          <td class="border border-gray-300 px-4 py-2 text-left">Total:</td>
+          <td class="border border-gray-300 px-4 py-2 text-left">Totais:</td>
           <td class="border border-gray-300 px-4 py-2 text-center">—</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ total_estimado }}</td>
           <td class="border border-gray-300 px-4 py-2 text-center">{{ total_gasto }}</td>
@@ -125,9 +108,9 @@
       </tfoot>
     </table>
 
-    <!-- Gráfico -->
-    <canvas id="graficoProdutividade" height="100"></canvas>
-
+<!-- GRÁFICO -->
+<h4 class="mt-4">Gráfico de Tempo Estimado vs Tempo Gasto</h4>
+<canvas id="graficoProdutividade"></canvas>
     <div class="mt-6 text-right">
       <a href="{% url 'projetos' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors">
         Voltar
@@ -139,11 +122,27 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+   document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("perfilMenuBtn");
+    const menu = document.getElementById("perfilDropdown");
+
+    if (btn) {
+      btn.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+      });
+
+-      document.addEventListener("click", (e) => {
+        if (!btn.contains(e.target) && !menu.contains(e.target)) {
+          menu.classList.add("hidden");
+        }
+      });
+    }
+  });
   const ctx = document.getElementById('graficoProdutividade');
 
   const labels = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto > 0 %}
+      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
         '{{ tarefa.nome|escapejs }}',
       {% endif %}
     {% endfor %}
@@ -151,16 +150,16 @@
 
   const estimado = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto > 0 %}
-        {{ tarefa.estimado }},
+      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
+        {{ tarefa.estimado_num|floatformat:2 }},
       {% endif %}
     {% endfor %}
   ];
 
   const gasto = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto > 0 %}
-        {{ tarefa.gasto }},
+      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
+        {{ tarefa.gasto_num|floatformat:2 }},
       {% endif %}
     {% endfor %}
   ];
@@ -171,34 +170,51 @@
       labels: labels,
       datasets: [
         {
-          label: 'Tempo Estimado (h)',
+          label: "Estimado",
           data: estimado,
           backgroundColor: 'rgba(99, 102, 241, 0.7)',
         },
         {
-          label: 'Tempo Gasto (h)',
+          label: "Gasto",
           data: gasto,
-          backgroundColor: 'rgba(239, 68, 68, 0.7)',
-        },
+          backgroundColor: 'rgba(239, 68, 68, 0.7)'
+        }
       ]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: 'bottom' },
-      },
+      plugins: { legend: { position: 'bottom' }},
       scales: {
         x: {
-          title: { display: true, text: 'Tarefas' },
-          ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 },
+          title: {
+            display: true,
+            text: 'Nome das Tarefas',
+            font: { size: 14, weight: 'bold' },
+          },
+          ticks: {
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+            font: { size: 11 },
+            callback: function(value) {
+              const label = this.getLabelForValue(value);
+              const words = label.split(" "); const chunkSize = 3; 
+              let lines = []; 
+              for (let i = 0; i < words.length; i += chunkSize)
+              { lines.push(words.slice(i, i + chunkSize).join(" ")); }
+              return lines;
+            }
+          }
         },
-        y: {
-          beginAtZero: true,
-          max: 10, // ✅ limita o gráfico a 10 horas
-          title: { display: true, text: 'Horas' },
-        },
-      },
-    },
+        y: { beginAtZero: true,
+        title: {
+        display: true,
+        text: 'Horas das tarefas',
+        font: { size: 14, weight: 'bold' },
+        }
+      }
+      }
+    }
   });
 </script>
 {% endblock %}

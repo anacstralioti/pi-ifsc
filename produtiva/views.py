@@ -490,13 +490,27 @@ def relatorio_produtividade(request, projeto_id):
     total_estimado = 0.0
     total_gasto = 0.0
 
+    def formatar_horas(valor):
+        if isinstance(valor, str):
+            return valor  # caso seja "—"
+
+        horas = int(valor)
+        minutos = round((valor - horas) * 60)
+
+        if horas > 0 and minutos > 0:
+            return f"{horas}h {minutos}min"
+        elif horas > 0 and minutos == 0:
+            return f"{horas}h"
+        else:
+            return f"{minutos}min"
+
     for t in tarefas:
         if t.cancelada:
             dados_tarefas.append({
                 "nome": t.nome_tarefa,
                 "status": "Cancelada",
-                "estimado": "-",
-                "gasto": "-",
+                "estimado": "—",
+                "gasto": "—",
             })
             continue
 
@@ -513,20 +527,18 @@ def relatorio_produtividade(request, projeto_id):
             except ValueError:
                 gasto_horas = 0
 
-        # Soma horas de TODAS as tarefas, mesmo não executadas
         total_estimado += estimado_horas
         total_gasto += gasto_horas
 
-        if gasto_horas == 0:
-            status = "Não executada"
-        else:
-            status = "Concluída"
+        status = "Concluída" if gasto_horas > 0 else "Não executada"
 
         dados_tarefas.append({
-            "nome": t.nome_tarefa,
-            "status": status,
-            "estimado": round(estimado_horas, 2),
-            "gasto": round(gasto_horas, 2),
+           "nome": t.nome_tarefa,
+    "status": status,
+    "estimado": formatar_horas(estimado_horas),
+    "gasto": formatar_horas(gasto_horas),
+    "estimado_num": estimado_horas,
+    "gasto_num": gasto_horas,
         })
 
     produtividade_percentual = 0
@@ -538,8 +550,8 @@ def relatorio_produtividade(request, projeto_id):
     contexto = {
         "projeto": projeto,
         "tarefas": dados_tarefas,
-        "total_estimado": round(total_estimado, 2),
-        "total_gasto": round(total_gasto, 2),
+        "total_estimado": formatar_horas(total_estimado),
+        "total_gasto": formatar_horas(total_gasto),
         "produtividade_percentual": produtividade_percentual,
     }
 
