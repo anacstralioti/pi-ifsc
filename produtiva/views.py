@@ -437,13 +437,18 @@ def apontamentos_tarefa(request, tarefa_id):
         action = request.POST.get('action')
         
         if action == 'start':
-            if not tarefa.apontamento_ativo:
-                Apontamento.objects.create(
-                    tarefa=tarefa,
-                    usuario=request.user,
-                    hora_inicial=timezone.now()
-                )
-                messages.success(request, 'Apontamento iniciado!')
+            ativo_usuario = Apontamento.objects.filter(
+                tarefa=tarefa,
+                usuario=request.user,
+                hora_final__isnull=True
+                ).first()
+            if not ativo_usuario:
+                    Apontamento.objects.create(
+                        tarefa=tarefa,
+                        usuario=request.user,
+                        hora_inicial=timezone.now()
+                    )
+                    messages.success(request, 'Apontamento iniciado!')
             else:
                 messages.error(request, 'Esta tarefa já possui um apontamento em andamento.')
 
@@ -465,13 +470,16 @@ def apontamentos_tarefa(request, tarefa_id):
                 messages.error(request, 'Apontamento ativo não encontrado.')
         
         return redirect('apontamentos_tarefa', tarefa_id=tarefa.id)
-
     apontamentos_concluidos = Apontamento.objects.filter(
         tarefa=tarefa, 
         hora_final__isnull=False
     ).order_by('-hora_inicial')
     
-    apontamento_ativo = tarefa.apontamento_ativo
+    apontamento_ativo = Apontamento.objects.filter(
+        tarefa=tarefa,
+        usuario=request.user,
+        hora_final__isnull=True
+    ).first()
 
     context = {
         'tarefa': tarefa,
