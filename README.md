@@ -1,5 +1,5 @@
-<h1 align="center"> Sistema Produtiva - Aplicação web para gerenciamento de tarefas e controle de tempo, desenvolvida com Django</h1>
-<img width="344" height="108" alt="logo" src="https://github.com/user-attachments/assets/97476068-a9e4-4606-9b2c-3135cbeb3ab7" />
+<h1 align="center"> <img width="344" height="108" alt="logo" src="https://github.com/user-attachments/assets/97476068-a9e4-4606-9b2c-3135cbeb3ab7" /> Sistema Produtiva - Aplicação web para gerenciamento de tarefas e controle de tempo, desenvolvida com Django</h1>
+
 
 ## Índice 
 * [Descrição do Projeto](#descrição-do-projeto)
