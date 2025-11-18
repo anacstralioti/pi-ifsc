@@ -2,8 +2,6 @@
 <img width="344" height="108" alt="logo" src="https://github.com/user-attachments/assets/97476068-a9e4-4606-9b2c-3135cbeb3ab7" />
 
 ## Índice 
-* [Título e Imagem de capa](#Título-e-Imagem-de-capa)
-* [Índice](#índice)
 * [Descrição do Projeto](#descrição-do-projeto)
 * [Funcionalidades e Demonstração da Aplicação](#funcionalidades-e-demonstração-da-aplicação)
 * [Manual de instalação](#manual-de-instalação)
