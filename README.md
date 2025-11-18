@@ -12,7 +12,7 @@
 
 ## Descrição do Projeto
 Este sistema concilia o controle de tarefas e o registro de horas trabalhadas, buscando também manter o histórico das atividades concluídas e gerar relatórios de comparação entre a expectativa e a realização real das tarefas, permitindo maior produtividade para profissionais em trabalho remoto.
-# Funcionalidades do projeto
+# :hammer: Funcionalidades do projeto
 - `1`: O sistema é dividido em dois tipos de usuários: Administrador, que tem acesso a todas as funcionalidades do sistema, e Usuário comum, que pode gerenciar as próprias tarefas e apontamentos.
 - `2`: Os usuários comuns têm acesso apenas aos projetos dos quais participam e podem visualizar os outros participantes envolvidos nesses mesmos projetos.
 - `3`: Apenas os administradores podem criar novos projetos e delegá-los aos participantes.

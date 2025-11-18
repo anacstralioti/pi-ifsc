@@ -1,3 +1,4 @@
+
 """
 Django settings for core project.
 
@@ -13,16 +14,26 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os 
 from django.contrib.messages import constants
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+LOGIN_URL = 'login'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'equipeprodutivaifsc@gmail.com'
+EMAIL_HOST_PASSWORD = 'bgnb tijk dnbk tppw'
+DEFAULT_FROM_EMAIL = 'equipeprodutivaifsc@gmail.com'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qy16xa*^49gj!1xtoveoibe8a1e%@e_i6+hf9u82b9$072&e*b'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'usuarios',
+    'produtiva',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'produtiva.context_processors.perfil_context',
             ],
         },
     },
@@ -113,6 +125,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+CSRF_FAILURE_VIEW = 'produtiva.views.csrf_error_view'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -133,3 +147,5 @@ MESSAGE_TAGS = {
     constants.SUCCESS: 'bg-green-50 text-green-700',
     constants.ERROR: 'bg-red-50 text-red-700'
 }
+
+AUTH_PROFILE_MODULE = 'produtiva.Perfil'
