@@ -417,6 +417,8 @@ def perfil(request):
                 return redirect('perfil')
             else:
                 messages.error(request, 'Não foi possível alterar a sua senha. Verifique os erros abaixo.')
+            context = {'password_form': password_form, 'user': user, 'perfil': perfil}
+            return render(request, 'perfil.html', context)
         else:
             messages.success(request, 'As suas informações de perfil foram salvas!')
 

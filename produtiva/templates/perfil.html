@@ -146,25 +146,42 @@
           {% endfor %}
         </div>
       {% endif %}
-
       <div>
         <label for="{{ password_form.old_password.id_for_label }}" class="block text-sm font-medium text-gray-700">Senha Antiga</label>
         <input type="password" name="{{ password_form.old_password.html_name }}" id="{{ password_form.old_password.id_for_label }}"
           class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300">
       </div>
-
+       {% if password_form.old_password.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in password_form.old_password.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
       <div>
         <label for="{{ password_form.new_password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Nova Senha</label>
         <input type="password" name="{{ password_form.new_password1.html_name }}" id="{{ password_form.new_password1.id_for_label }}"
           class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300">
       </div>
-
+       {% if password_form.new_password1.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in password_form.new_password1.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
       <div>
         <label for="{{ password_form.new_password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Confirmação da Nova Senha</label>
         <input type="password" name="{{ password_form.new_password2.html_name }}" id="{{ password_form.new_password2.id_for_label }}"
           class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-base text-gray-800 outline outline-1 outline-gray-300">
       </div>
-
+      {% if password_form.new_password2.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in password_form.new_password2.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
       <div class="flex justify-end pt-4">
         <button 
           type="submit"
