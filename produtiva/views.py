@@ -10,6 +10,8 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from produtiva.models import Apontamento, Tarefa, Projeto
 from django.utils import timezone
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 def registro(request):
     if request.method == "POST":
@@ -44,7 +46,13 @@ def registro(request):
                 extra_tags="senha_error",
             )
             has_error = True
-
+        else:
+            try:
+                validate_password(senha)
+            except ValidationError as e:
+                for error in e.messages:
+                    messages.error(request, error, extra_tags="senha_error")
+                has_error = True    
         if senha != confirmar_senha:
             messages.error(
                 request, "As senhas não coincidem", extra_tags="confirmar_senha_error"
