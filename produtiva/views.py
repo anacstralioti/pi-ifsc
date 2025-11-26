@@ -505,71 +505,71 @@ def relatorio_produtividade(request, projeto_id):
     tarefas = Tarefa.objects.filter(projeto=projeto)
 
     dados_tarefas = []
-    total_estimado = 0.0
-    total_gasto = 0.0
+    total_estimado_min = 0
+    total_gasto_min = 0
 
-    def formatar_horas(valor):
-        if isinstance(valor, str):
-            return valor  # caso seja "—"
-
-        horas = int(valor)
-        minutos = round((valor - horas) * 60)
-
-        if horas > 0 and minutos > 0:
-            return f"{horas}h {minutos}min"
-        elif horas > 0 and minutos == 0:
-            return f"{horas}h"
-        else:
-            return f"{minutos}min"
+    def para_minutos(horas_decimal):
+        """Converte 1.5h → 90min"""
+        return int(round(horas_decimal * 60))
 
     for t in tarefas:
+
+        # Canceladas primeiro
         if t.cancelada:
             dados_tarefas.append({
                 "nome": t.nome_tarefa,
                 "status": "Cancelada",
                 "estimado": "—",
                 "gasto": "—",
+                "estimado_num": 0,
+                "gasto_num": 0
             })
             continue
 
-        estimado_horas = (
-            t.estimativa_horas.hour + t.estimativa_horas.minute / 60
+        # Estimado em minutos
+        minutos_estimado = (
+            t.estimativa_horas.hour * 60 + t.estimativa_horas.minute
             if t.estimativa_horas else 0
         )
 
-        gasto_horas = 0
+        # Gasto em minutos
+        minutos_gasto = 0
         if t.total_horas_gastas_str:
             try:
                 h, m = map(int, t.total_horas_gastas_str.split(":"))
-                gasto_horas = h + m / 60
-            except ValueError:
-                gasto_horas = 0
+                minutos_gasto = h * 60 + m
+            except:
+                minutos_gasto = 0
 
-        total_estimado += estimado_horas
-        total_gasto += gasto_horas
-
-        status = "Concluída" if gasto_horas > 0 else "Não executada"
+        # STATUS REAL
+        if t.concluida:
+            status = "Concluída"
+        elif t.cancelada:
+            status = "Cancelada"
+        else:
+            status = "Não executada"
 
         dados_tarefas.append({
-           "nome": t.nome_tarefa,
-    "status": status,
-    "estimado": formatar_horas(estimado_horas),
-    "gasto": formatar_horas(gasto_horas),
-    "estimado_num": estimado_horas,
-    "gasto_num": gasto_horas,
+            "nome": t.nome_tarefa,
+            "status": status,
+            "estimado": f"{minutos_estimado}min" if minutos_estimado else "—",
+            "gasto": f"{minutos_gasto}min" if minutos_gasto else "—",
+            "estimado_num": minutos_estimado,
+            "gasto_num": minutos_gasto,
         })
 
+    # PRODUTIVIDADE
     produtividade_percentual = 0
-    if total_estimado > 0:
+    if total_estimado_min > 0:
         produtividade_percentual = round(
-            (min(total_estimado, total_gasto) / total_estimado) * 100, 1
+            (min(total_estimado_min, total_gasto_min) / total_estimado_min) * 100, 1
         )
 
     contexto = {
         "projeto": projeto,
         "tarefas": dados_tarefas,
-        "total_estimado": formatar_horas(total_estimado),
-        "total_gasto": formatar_horas(total_gasto),
+        "total_estimado": f"{total_estimado_min}min",
+        "total_gasto": f"{total_gasto_min}min",
         "produtividade_percentual": produtividade_percentual,
     }
 

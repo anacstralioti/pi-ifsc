@@ -24,24 +24,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('.editar-projeto-btn').forEach(button => {
     button.addEventListener('click', function () {
-        const modal = document.getElementById('editarProjetoModal');
-        const id = this.dataset.id;
-        const nome = this.dataset.nome;
-        const descricao = this.dataset.descricao;
-        const participantes = this.dataset.participantes ? this.dataset.participantes.split(',') : [];
+        alert("O EVENTO DISPAROU!");
+        console.log("CLICOU NO BOTÃO EDITAR");
 
-        document.getElementById('editar_projeto_id').value = id;
-        document.getElementById('editar_nome_projeto').value = nome;
-        document.getElementById('editar_descricao').value = descricao;
-        document.getElementById('editarProjetoForm').action = `/produtiva/projetos/editar/${id}/`;
 
-        const select = document.getElementById('editar_participantes');
-        Array.from(select.options).forEach(opt => {
-        opt.selected = participantes.includes(opt.value);
+            const modal = document.getElementById('editarProjetoModal');
+            const id = this.dataset.id;
+            const nome = this.dataset.nome;
+            const descricao = this.dataset.descricao;
+            const participantes = this.dataset.participantes
+                ? this.dataset.participantes.split(',')
+                : [];
+
+            // campos básicos
+            document.getElementById('editar_projeto_id').value = id;
+            document.getElementById('editar_nome_projeto').value = nome;
+            document.getElementById('editar_descricao').value = descricao;
+            document.getElementById('editarProjetoForm').action = `/produtiva/projetos/editar/${id}/`;
+
+            // Selecionar o campo
+            const selectEl = document.getElementById('editar_participantes');
+
+            // Se já existir uma instância, remover
+            if (selectEl.tomselect) {
+                selectEl.tomselect.destroy();
+            }
+
+            // Criar a instância do zero
+            const tom = new TomSelect(selectEl, {
+                plugins: ['remove_button'],
+                persist: false,
+                create: false,
+                placeholder: 'Selecione participantes...',
+            });
+
+            // Definir os selecionados
+            tom.setValue(participantes);
+
+            modal.classList.remove('hidden');
         });
-
-        modal.classList.remove('hidden');
-    });
     });
 
     document.getElementById('cancelEditarProjeto').addEventListener('click', () => {

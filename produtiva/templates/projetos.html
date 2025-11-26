@@ -81,7 +81,6 @@ Gerenciamento de Projetos - Produtiva
       </a>
     {% else %}
       <div class="text-center bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
-        <p class="text-gray-600 font-medium text-sm lg:text-base">Você participa de projetos ativos.</p>
         <p class="text-gray-500 text-xs lg:text-sm mt-1">Somente administradores podem criar novos projetos.</p>
       </div>
     {% endif %}
@@ -92,14 +91,14 @@ Gerenciamento de Projetos - Produtiva
         <h3 class="text-lg font-semibold mb-4">Adicionar Novo Projeto</h3>
         <form action="{% url 'projetos' %}" method="post">
           {% csrf_token %}
-          <label class="block text-gray-700 font-medium text-sm lg:text-base">Nome do Projeto</label>
+          <label class="block text-gray-700 font-medium text-sm lg:text-base">Nome do Projeto <span class="text-red-500">*</span></label>
           <input type="text" name="nome_projeto" placeholder="Nome do Projeto" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-sm lg:text-base text-gray-800 outline outline-1 outline-gray-300 placeholder:text-gray-500 focus:outline-2 focus:outline-indigo-500" required />
           <label class="block text-gray-700 font-medium mt-3 text-sm lg:text-base">Descrição</label>
           <textarea name="descricao" placeholder="Descrição do Projeto (Opcional)" rows="4" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-sm lg:text-base text-gray-800 outline outline-1 outline-gray-300 placeholder:text-gray-500 focus:outline-2 focus:outline-indigo-500"></textarea>
 
           {% if user.perfil.is_admin %}
             <div class="mb-3 mt-3">
-              <label class="block text-gray-700 font-medium text-sm lg:text-base">Participantes</label>
+              <label class="block text-gray-700 font-medium text-sm lg:text-base">Participantes <span class="text-red-500">*</span></label>
               <select id="participantesSelect" name="participantes" multiple class="text-sm lg:text-base">
                 {% for u in users %}
                   {% if not u.perfil.is_admin %}
@@ -132,11 +131,11 @@ Gerenciamento de Projetos - Produtiva
         <textarea name="descricao" id="editar_descricao" rows="3" class="mt-1 block w-full rounded-md bg-gray-100 px-3 py-2 text-sm lg:text-base"></textarea>
         <label class="block text-gray-700 mt-3 text-sm lg:text-base">Participantes</label>
         <select id="editar_participantes" name="participantes" multiple class="block w-full rounded-md border border-gray-300 bg-white text-gray-800 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 px-3 py-2 text-sm lg:text-base">
-          {% for u in users %}
-            {% if not u.perfil.is_admin %}
-              <option value="{{ u.id }}">{{ u.first_name }} ({{ u.username }})</option>
-            {% endif %}
-          {% endfor %}
+            {% for u in users %}
+                {% if not u.perfil.is_admin %}
+                    <option value="{{ u.id }}">{{ u.first_name }} ({{ u.username }})</option>
+                {% endif %}
+            {% endfor %}
         </select>
         <div class="flex justify-end mt-4 space-x-2">
           <button type="button" id="cancelEditarProjeto" class="px-3 py-2 lg:px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm lg:text-base">Cancelar</button>
@@ -171,7 +170,12 @@ Gerenciamento de Projetos - Produtiva
               </div>
               <div class="flex items-center justify-end space-x-2 sm:space-x-3">
                 {% if user.perfil.is_admin %}
-                  <button class="editar-projeto-btn p-2 text-gray-500 hover:text-indigo-600" data-id="{{ projeto.id }}" data-nome="{{ projeto.nome_projeto }}" data-descricao="{{ projeto.descricao }}" data-participantes="{{ projeto.participantes.all|join:',' }}" title="Editar Projeto">
+                  <button class="editar-projeto-btn p-2 text-gray-500 hover:text-indigo-600"
+                      data-id="{{ projeto.id }}"
+                      data-nome="{{ projeto.nome_projeto }}"
+                      data-descricao="{{ projeto.descricao }}"
+                      data-participantes="{% for p in projeto.participantes.all %}{% if not p.perfil.is_admin %}{{ p.id }}{% endif %}{% if not forloop.last %},{% endif %}{% endfor %}"
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 lg:size-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                     </svg>
@@ -274,5 +278,67 @@ Gerenciamento de Projetos - Produtiva
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script src="{% static 'js/projeto.js' %}"></script>
 <script src="{% static 'js/tomselect-init.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    const editarSelectEl = document.getElementById('editar_participantes');
+    let editarTomSelect = null;
+
+    if (editarSelectEl) {
+
+        if (editarSelectEl.tomselect) {
+            editarSelectEl.tomselect.destroy();
+        }
+
+        editarTomSelect = new TomSelect(editarSelectEl, {
+            plugins: ['remove_button'],
+            persist: false,
+            maxItems: null,
+            create: false,
+            placeholder: 'Selecione participantes...',
+            render: {
+                option: (data, escape) => `<div class="py-1 px-2">${escape(data.text)}</div>`,
+                item: (data, escape) =>
+                    `<div class="bg-indigo-100 text-indigo-800 rounded px-2 py-0.5 mr-1 mb-1">${escape(data.text)}</div>`
+            }
+        });
+    }
+
+    document.querySelectorAll('.editar-projeto-btn').forEach(btn => {
+
+        btn.addEventListener('click', function () {
+
+            const modal = document.getElementById('editarProjetoModal');
+
+            const id = this.dataset.id;
+            const nome = this.dataset.nome;
+            const descricao = this.dataset.descricao;
+            const participantes = this.dataset.participantes
+                ? this.dataset.participantes.split(',').filter(x => x.trim() !== "")
+                : [];
+
+            document.getElementById('editar_projeto_id').value = id;
+            document.getElementById('editar_nome_projeto').value = nome;
+            document.getElementById('editar_descricao').value = descricao;
+            document.getElementById('editarProjetoForm').action = `/produtiva/projetos/editar/${id}/`;
+
+            editarTomSelect.clear();
+
+            editarTomSelect.setValue(participantes);
+
+            modal.classList.remove('hidden');
+        });
+    });
+
+    const cancelEditarProjeto = document.getElementById('cancelEditarProjeto');
+    if (cancelEditarProjeto) {
+        cancelEditarProjeto.addEventListener('click', () => {
+            document.getElementById('editarProjetoModal').classList.add('hidden');
+        });
+    }
+
+});
+</script>
 
 {% endblock 'body' %}

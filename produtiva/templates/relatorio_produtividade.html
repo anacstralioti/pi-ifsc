@@ -54,17 +54,6 @@
       Relatório de Produtividade - {{ projeto.nome_projeto }}
     </h1>
 
-    <!-- Produtividade geral -->
-    <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-700 mb-2">Produtividade Geral</h2>
-      <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-        <div class="h-4 bg-indigo-600" style="width: {{ produtividade_percentual }}%; transition: width 0.5s ease;"></div>
-      </div>
-      <p class="text-gray-600 text-sm mt-2">
-        {{ produtividade_percentual }}% do tempo dentro do estimado
-      </p>
-    </div>
-
     <!-- Tabela -->
     <table class="w-full border-collapse border border-gray-300 mb-6">
       <thead class="bg-gray-50">
@@ -90,7 +79,6 @@
             </td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.estimado }}</td>
             <td class="border border-gray-300 px-4 py-2 text-center">{{ tarefa.gasto }}</td>
-            <td class="border border-gray-300 px-4 py-2 text-center"></td>
           </tr>
         {% empty %}
           <tr>
@@ -98,14 +86,6 @@
           </tr>
         {% endfor %}
       </tbody>
-      <tfoot class="bg-gray-100 font-semibold">
-        <tr>
-          <td class="border border-gray-300 px-4 py-2 text-left">Totais:</td>
-          <td class="border border-gray-300 px-4 py-2 text-center">—</td>
-          <td class="border border-gray-300 px-4 py-2 text-center">{{ total_estimado }}</td>
-          <td class="border border-gray-300 px-4 py-2 text-center">{{ total_gasto }}</td>
-        </tr>
-      </tfoot>
     </table>
 
 <!-- GRÁFICO -->
@@ -122,68 +102,69 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-   document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("perfilMenuBtn");
-    const menu = document.getElementById("perfilDropdown");
 
-    if (btn) {
-      btn.addEventListener("click", () => {
-        menu.classList.toggle("hidden");
-      });
-
--      document.addEventListener("click", (e) => {
-        if (!btn.contains(e.target) && !menu.contains(e.target)) {
-          menu.classList.add("hidden");
-        }
-      });
-    }
-  });
   const ctx = document.getElementById('graficoProdutividade');
 
+  /* ================================
+        GERAR LABELS
+     ================================ */
   const labels = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
-        '{{ tarefa.nome|escapejs }}',
-      {% endif %}
+        {% if tarefa.status == "Concluída" %}
+            '{{ tarefa.nome|escapejs }}',
+        {% endif %}
     {% endfor %}
   ];
 
+  /* ================================
+        TEMPO ESTIMADO EM MINUTOS
+     ================================ */
   const estimado = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
-        {{ tarefa.estimado_num|floatformat:2 }},
-      {% endif %}
+        {% if tarefa.status == "Concluída" %}
+            {{ tarefa.estimado_num|default:0 }},
+        {% endif %}
     {% endfor %}
   ];
 
+  /* ================================
+        TEMPO GASTO EM MINUTOS
+     ================================ */
   const gasto = [
     {% for tarefa in tarefas %}
-      {% if tarefa.status == "Concluída" and tarefa.gasto_num > 0 %}
-        {{ tarefa.gasto_num|floatformat:2 }},
-      {% endif %}
+        {% if tarefa.status == "Concluída" %}
+            {{ tarefa.gasto_num|default:0 }},
+        {% endif %}
     {% endfor %}
   ];
 
+  /* ================================
+        INICIALIZA CHART
+     ================================ */
   new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [
         {
-          label: "Estimado",
+          label: "Estimado (min)",
           data: estimado,
           backgroundColor: 'rgba(99, 102, 241, 0.7)',
         },
         {
-          label: "Gasto",
+          label: "Gasto (min)",
           data: gasto,
           backgroundColor: 'rgba(239, 68, 68, 0.7)'
         }
       ]
     },
+
     options: {
       responsive: true,
-      plugins: { legend: { position: 'bottom' }},
+      plugins: { 
+        legend: { position: 'bottom' }
+      },
+
       scales: {
         x: {
           title: {
@@ -191,30 +172,41 @@
             text: 'Nome das Tarefas',
             font: { size: 14, weight: 'bold' },
           },
+
           ticks: {
             autoSkip: false,
             maxRotation: 0,
             minRotation: 0,
             font: { size: 11 },
+            
+            /* QUEBRA NOMES MUITO LONGOS EM 3 PALAVRAS POR LINHA */
             callback: function(value) {
               const label = this.getLabelForValue(value);
-              const words = label.split(" "); const chunkSize = 3; 
-              let lines = []; 
-              for (let i = 0; i < words.length; i += chunkSize)
-              { lines.push(words.slice(i, i + chunkSize).join(" ")); }
+              const words = label.split(" ");
+              const chunkSize = 3;
+              let lines = [];
+
+              for (let i = 0; i < words.length; i += chunkSize) {
+                lines.push(words.slice(i, i + chunkSize).join(" "));
+              }
+
               return lines;
             }
           }
         },
-        y: { beginAtZero: true,
-        title: {
-        display: true,
-        text: 'Horas das tarefas',
-        font: { size: 14, weight: 'bold' },
+
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Minutos',
+            font: { size: 14, weight: 'bold' },
+          }
         }
-      }
       }
     }
   });
+
 </script>
+
 {% endblock %}
